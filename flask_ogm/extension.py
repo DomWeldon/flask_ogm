@@ -16,6 +16,7 @@ class FlaskOGMError(Exception):
 class GraphCredentialsIncompleteError(FlaskOGMError): pass
 class GraphCredentialsNotFoundError(FlaskOGMError): pass
 class OutOfApplicationContextError(FlaskOGMError): pass
+class DefaultGraphCredentialsUnclearError(FlaskOGMError): pass
 
 class OGM(object):
     """Extension to add OGM and py2neo support.
@@ -41,7 +42,7 @@ class OGM(object):
             self.init_app(app)
 
     def init_app(self, app):
-        # don't need to teardown anything
+        """Provided to support creation using factory method."""
         pass
 
     def connect(self, bind=None):

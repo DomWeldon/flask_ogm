@@ -106,3 +106,25 @@ class GraphTestCase(FlaskOGMTestCase):
             assert True
         else:
             assert False
+
+    def test_default_connection_unclear(self):
+        try:
+            app, client = self.create_test_app(
+                OGM_GRAPH_HOST = 'localhost',
+                OGM_GRAPH_USER = 'neo4j',
+                OGM_GRAPH_PASSWORD = 'password',
+                OGM_GRAPH_CREDENTIALS = {
+                    'DEFAULT': dict(
+                        HOST = 'localhost',
+                        USER = 'neo4j',
+                        PASSWORD = 'password'),
+                }
+
+            ) # no password
+            with app.app_context():
+                ogm = OGM(app)
+                assert isinstance(ogm.graph, Graph)
+        except DefaultGraphCredentialsUnclearError:
+            assert True
+        else:
+            assert False
