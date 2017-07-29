@@ -1,1 +1,5 @@
-*.pyc
+flask_ogm_env
+__pycache__
+flask_ogm/__pycache__
+test/__pycache__
+*.py[cod]

@@ -15,6 +15,7 @@ except ImportError:
 
     from flask_ogm import OGM
 
+
 app = Flask('Flask-OGM Example App')
 
 app.config.update(

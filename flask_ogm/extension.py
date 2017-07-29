@@ -15,6 +15,7 @@ class FlaskOGMError(Exception):
 
 class GraphCredentialsIncompleteError(FlaskOGMError): pass
 class GraphCredentialsNotFoundError(FlaskOGMError): pass
+class OutOfApplicationContextError(FlaskOGMError): pass
 
 class OGM(object):
     """Extension to add OGM and py2neo support.
@@ -136,5 +137,5 @@ class OGM(object):
                 ctx.ogm_graphs[bind] = self.connect(bind=bind)
 
             return ctx.ogm_graphs[bind]
-        print(stack)
-        return False
+
+        raise OutOfApplicationContextError()

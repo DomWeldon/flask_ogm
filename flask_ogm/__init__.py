@@ -1,1 +1,1 @@
-from .extension import OGM
+from .extension import *
