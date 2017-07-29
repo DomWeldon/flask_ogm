@@ -14,7 +14,7 @@ Flask-OGM provides an interface between a flask application and the py2neo_ driv
 Other features will be added shortly as time goes on to assist with developing Flask apps using py2neo.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
    install
