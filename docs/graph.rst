@@ -3,15 +3,19 @@
 Graph Connections
 =================
 
-Flask-OGM supports single or multiple connections to neo4j graph databases. There is a concept of a 'default' connection, which can always be referenced through ``ogm.graph``, and which is be used as the connection in web tools unless explicitly stated otherwise. An address and authentication details - herein termed "Graph Credentials" - must be provided for every database. The host, user and password are required for every connection, whilst the specified port and protocol are optional; by default, ``bolt`` on port ``7687`` is assumed when optional graph credentials are not passed.
+Flask-OGM supports single or multiple connections to neo4j graph databases. There is a concept of a 'default' connection, which can always be referenced through ``ogm.graph``, and which is be used as the connection in web tools unless explicitly stated otherwise.
+
+An address and authentication details - herein termed "Graph Credentials" - must be provided for every database: the host, user and password are required for every connection. The specified port and protocol are optional; by default, ``bolt`` on port ``7687`` is assumed when optional graph credentials are not passed.
 
 Access to all graphs is provided by py2neo.database.Graph_ objects.
 
 .. _py2neo.database.Graph: http://py2neo.org/v3/database.html#the-graph
 
-The default database exists since, in most use cases, it is envisaged that applications will employ only one database. You can therefore set the connection credentials for the default connection as top-level configuration directives in ``app.config``, whilst connections to other databases must be specified in ``app.config['OGM_GRAPH_CREDENTIALS']`` as a dictionary of dictionaries. Each connection has a name, which is referred to as a ``bind``, in the ``OGM_GRAPH_CREDENTIALS`` dictionary, credentials for this connection should be stored as a dictionary under a key, the value of which should be the name (see :ref:`multiple_connections_binds`). The default connection's graph credentials can also be specified in this way, under the bind ``DEFAULT``, however, if default graph credentials are specified both as a bind and as individual top-level configuration directives, a  :ref:`default_graph_credentials_unclear_error` will be raised.
+The default database exists since, in most use cases, it is envisaged that applications will employ only one database. You can therefore set the graph credentials for the default connection as top-level configuration directives in ``app.config``, whilst connections to other databases must be specified in ``app.config['OGM_GRAPH_CREDENTIALS']`` as a dictionary of dictionaries.
 
-A bind can be any hashable value.
+Every reference to a graph has a name, which is referred to its ``bind``. In the ``OGM_GRAPH_CREDENTIALS`` dictionary, credentials for each connection should be specified as a dictionary, with its bing as they key (see :ref:`multiple_connections_binds`). The default connection's graph credentials can also be specified in this way, under the bind ``DEFAULT``. However, if default graph credentials are specified both as a bind and as individual top-level configuration directives, a  :ref:`default_graph_credentials_unclear_error` will be raised.
+
+Since binds are dictionary keys, a bind can be any hashable value.
 
 Examples relating to the above are provided below.
 
@@ -27,6 +31,7 @@ The simplest way to connect to a single graph is as below. Optional parameters a
 ::
 
   from flask import Flask
+  from flask_ogm import OGM
 
   app = Flask('Flask OGM Single Connection Test App')
 
@@ -36,7 +41,13 @@ The simplest way to connect to a single graph is as below. Optional parameters a
   app.config['OGM_GRAPH_PROTOCOL'] = 'bolt' # optional
   app.config['OGM_GRAPH_PORT'] = '7687' # optional, can be string or int
 
+  ogm = OGM(app)
 
+  @app.route('/count')
+  def count():
+      """Get counts from both graphs."""
+      q = 'MATCH (n) RETURN COUNT(n) AS node_count'
+      return str(ogm.graph.run(q).evaluate())
 
 .. _multiple_connections_binds:
 
@@ -50,7 +61,7 @@ On occasion, an application will need to use more than one database. These can b
     from flask import Flask, jsonify
     from flask_ogm import OGM
 
-    app = Flask('Flask OGM Single Connection Test App')
+    app = Flask('Flask OGM Multiple Connection Test App')
     # set config using binds
     app.config['OGM_GRAPH_CREDENTIALS'] = {
         'LOCAL': {
@@ -92,7 +103,7 @@ The default connection can also be set in this way, using the bind ``DEFAULT``, 
     from flask import Flask, jsonify
     from flask_ogm import OGM
 
-    app = Flask('Flask OGM Single Connection Test App')
+    app = Flask('Flask OGM Default as Bind Connection Test App')
     # set default config using bind
     app.config['OGM_GRAPH_CREDENTIALS'] = {
         'DEFAULT': {

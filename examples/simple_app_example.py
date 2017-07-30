@@ -4,7 +4,7 @@ Flask-OGM Example
 -----------------
 Tiny app designed to demonstrate using the extension.
 """
-from flask import Flask, jsonify
+from flask import Flask
 from py2neo.ogm import GraphObject
 try:
     from flask_ogm import OGM  # typical import
@@ -27,9 +27,9 @@ app.config.update(
 
 ogm = OGM(app)
 
-@app.route('/', defaults = { 'test': 1 })
+@app.route('/')
 def helloWorld():
-    return jsonify({ 'd': ogm.graph.run('MATCH (n) RETURN COUNT(n) AS c').evaluate() })
+    return str(ogm.graph.run('MATCH (n) RETURN COUNT(n) AS c').evaluate())
 
 if __name__ == '__main__':
     app.run(debug=True)

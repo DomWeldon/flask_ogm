@@ -1,6 +1,6 @@
 from functools import wraps
+import inspect
 
-from py2neo.ogm import GraphObject
 from flask import current_app
 
 # import application context - safe vor pre v.09
@@ -31,7 +31,7 @@ ILLEGAL_ARGUMENT_MESSAGES = {
         'Your constructor, specified as a string point to an attribute '
         'of your graph_object, was found but is not callable: '
     ),
-    'CONSTRUCTOR_NOT_CALLABLE': (
+    'CONSTRUCTOR_FQN_NOT_CALLABLE': (
         'Constructor method not callable:'
     ),
     'NO_CALLABLE_CONSTRUCTOR_FOUND': (
@@ -42,37 +42,48 @@ ILLEGAL_ARGUMENT_MESSAGES = {
         'Constructor invalid: '
     ),
     'DEFAULT_CONSTRUCTOR_NOT_FOUND': (
-        'The default constructor, GraphObject.select, is not implemented '
+        'The default constructor, `select`, is not implemented '
         'for this graph_object: '
+    ),
+    'IMPORT_REFERENCES_MUST_BE_FQN': (
+        'References to an object to import must be fully qualified names, '
+        'no possible module found for: '
+    ),
+    'GRAPH_OBJECT_FQN_NOT_FOUND': (
+        'Your graph obkject, specified as a fully qualified string to import,'
+        ' was not found: '
     )
 }
 
 class ParamConverterIllegalArgumentException(ValueError): pass
 
-def resolve_fqn_to_callable(fqn):
+def resolve_fqn_to_object(fqn):
     """Resolve a string to a callable
     """
-    module_name, _, class_name = fqn.rpartition(".")
-    module = __import__(module_name, fromlist=".")
-    c = getattr(module, class_name)
-    if not callable(c):
-        raise TypeError()
-    return c
+    module_name, dot, class_name = fqn.rpartition('.')
+    module = __import__(module_name, fromlist = [class_name])
+    return getattr(module, class_name)
 
 class ParamConverter(object):
     """Convert function arguments which contain lookup values
     into py2neo.ogm.GraphObjects or collections thereof.
     """
+
+    DEFAULT_CONSTRUCTOR_METHOD = 'select'
+
     def __init__(self, graph_object = None, constructor = None, param = None,
                  select_on = None, on_not_found = None, bind = None,
                  on_more_than_one = None, unique = True, order_by = None,
-                 inject_old_kwarg_as = None):
+                 inject_old_kwarg_as = None, call_query_method = 'data'):
         """Decorator for Flask controllers. Will convert a parameter to
         either a GraphObject or a collection of GraphObject based on
         a query to the graph. If no object is found, it will act as
         instructed, by default, returning a 404.
 
-        :param graph_object: GraphObject to return instances of
+        :param graph_object: class to return instances of, usually
+                             a py2neo.ogm.GraphObject but can be custom
+                             so long as it implements default method
+                             if no constructor specified
         :param constructor: reference to the method used query the
                             graph, str or callable, if str then can be
                             either fully qualified reference to a
@@ -112,7 +123,6 @@ class ParamConverter(object):
             constructor = constructor,
             graph_object = graph_object)
 
-
         # work out the return type - is it a list or a single value?
 
         # what do we do if it's not found?
@@ -121,19 +131,33 @@ class ParamConverter(object):
 
         # do we inject the old param?
 
-
-        return self
-
     def __call__(self, *args, **kwargs):
         """"""
         pass
 
-    def resolve_constructor(self, constructor, graph_object):
+    def resolve_constructor(self, constructor = None, graph_object = None):
+        # is the graph object a string ref?
+        if isinstance(graph_object, str):
+            # yes`
+            try:
+                resolved_object = resolve_fqn_to_object(graph_object)
+            except ImportError:
+                raise ParamConverterIllegalArgumentException(
+                    ILLEGAL_ARGUMENT_MESSAGES['GRAPH_OBJECT_FQN_NOT_FOUND']
+                    + graph_object
+                )
+            except ValueError:
+                raise ParamConverterIllegalArgumentException(
+                    ILLEGAL_ARGUMENT_MESSAGES['IMPORT_REFERENCES_MUST_BE_FQN']
+                    + graph_object
+                )
+            graph_object = resolved_object
+
         # is it a callable?
         if callable(constructor) and graph_object is None:
             # yes
-            self.constructor = constructor
-        elif graph_object is not None:
+            return constructor
+        elif graph_object is not None and callable(constructor):
             raise ParamConverterIllegalArgumentException(
                 ILLEGAL_ARGUMENT_MESSAGES[
                     'CONSTRUCTOR_SHOULD_NOT_BE_CALLABLE'
@@ -141,36 +165,46 @@ class ParamConverter(object):
                 + repr(constructor)
             )
 
-
         # no, is it string reference to a callable?
         if isinstance(constructor, str) and '.' in constructor:
             try:
                 # copy py2neo code here
-                self.constructor = resolve_fqn_to_callable(constructor)
+                resolved_object = resolve_fqn_to_object(constructor)
             except ImportError:
                 # reference not found
                 raise ParamConverterIllegalArgumentException(
                     ILLEGAL_ARGUMENT_MESSAGES['CONSTRUCTOR_FQN_NOT_FOUND']
                     + str(constructor)
                 )
-            except TypeError:
+            except ValueError:
                 raise ParamConverterIllegalArgumentException(
-                    ILLEGAL_ARGUMENT_MESSAGES['CONSTRUCTOR_NOT_CALLABLE']
+                    ILLEGAL_ARGUMENT_MESSAGES['IMPORT_REFERENCES_MUST_BE_FQN']
                     + str(constructor)
                 )
+            if not callable(resolved_object):
+                raise ParamConverterIllegalArgumentException(
+                    ILLEGAL_ARGUMENT_MESSAGES['CONSTRUCTOR_FQN_NOT_CALLABLE']
+                    + str(constructor)
+                )
+            return resolved_object
 
         # a reference to a method on graph_object?
         if isinstance(constructor, str) \
-           and isinstance(graph_object, GraphObject):
-           # should be
+           and inspect.isclass(graph_object):
+            # should be
             try:
-                self.constructor = getattr(graph_object, constructor)
+                constructor_attr = getattr(graph_object, constructor)
                 # it is!
             except AttributeError:
                 # but it isn't!
                 raise ParamConverterIllegalArgumentException(
                     ILLEGAL_ARGUMENT_MESSAGES['CONSTRUCTOR_ATTR_NOT_FOUND']
                 )
+            if not callable(constructor_attr):
+                raise ParamConverterIllegalArgumentException(
+                    ILLEGAL_ARGUMENT_MESSAGES['CONSTRUCTOR_ATTR_NOT_CALLABLE']
+                )
+            return constructor_attr
 
         # something very wrong?
         if constructor is not None:
@@ -189,13 +223,14 @@ class ParamConverter(object):
 
         # is it the default constructor?
         try:
-            self.constructor = graph_object.select
+            return getattr(graph_object, self.DEFAULT_CONSTRUCTOR_METHOD)
             # yes
         except AttributeError:
             # no
             raise ParamConverterIllegalArgumentException(
-                'DEFAULT_CONSTRUCTOR_NOT_FOUND'
+                ILLEGAL_ARGUMENT_MESSAGES['DEFAULT_CONSTRUCTOR_NOT_FOUND']
                 + repr(graph_object)
             )
 
-        return True
+        # code should never run past here
+        assert False
