@@ -1,4 +1,5 @@
 from py2neo import Graph
+from werkzeug.exceptions import NotFound
 
 try:
     from flask_ogm.param_converter import *  # typical import
@@ -14,23 +15,7 @@ except ImportError:
 from .util import FlaskOGMTestCase
 from .fixtures import Widget
 
-class ParamConverterTestCase(FlaskOGMTestCase): pass
-
-class ResolveFQNToCallableTestCase(ParamConverterTestCase):
-    """Tesst resolve_fqn_to_object to ensure it imports correctly
-    """
-    def test_one_dot(self):
-        c = resolve_fqn_to_object('py2neo.ogm')
-        from py2neo import ogm
-        assert c == ogm
-
-    def test_two_dots(self):
-        c = resolve_fqn_to_object('tests.fixtures.Widget')
-        assert c == Widget
-
-class ResolveConstructorTestCase(ParamConverterTestCase):
-    """Test ParamConverter.resolve_constructor()
-    """
+class ParamConverterTestCase(FlaskOGMTestCase):
     def check_for_exception_message(self, message_key, **kwargs):
         """Check that the right exception / message is produced for
         given combination of arguments
@@ -47,10 +32,88 @@ class ResolveConstructorTestCase(ParamConverterTestCase):
         else:
             # no exception produced, test fails
             assert False
+
+class CallableGeneratorsTestCase(ParamConverterTestCase):
+    def test_on_more_than_one_assigned_properly(self):
+        pc = ParamConverter(graph_object = Widget, single = True,
+                            check_unique = True, param = 'id')
+        assert pc.on_more_than_one() == 500
+
+    def test_on_not_found_assigned_properly(self):
+        pc = ParamConverter(graph_object = Widget, param = 'id')
+        assert pc.on_not_found() == 404
+
+    def test_with_int(self):
+        assert ParamConverter.resolve_to_return_callable(500)() == 500
+
+    def test_with_callable(self):
+        def c():
+            return NotFound()
+        assert isinstance(ParamConverter.resolve_to_return_callable(c)(), NotFound)
+
+class ResolveFQNToCallableTestCase(ParamConverterTestCase):
+    """Tesst resolve_fqn_to_object to ensure it imports correctly
+    """
+    def test_one_dot(self):
+        c = resolve_fqn_to_object('py2neo.ogm')
+        from py2neo import ogm
+        assert c == ogm
+
+    def test_two_dots(self):
+        c = resolve_fqn_to_object('tests.fixtures.Widget')
+        assert c == Widget
+
+class MissingOrIllogicalArgumentCombinationTestCase(ParamConverterTestCase):
+    """Test for bad combinations of arguments
+    """
+    def test_select_on_and_constructor_set(self):
+        self.check_for_exception_message(
+            'SELECT_ON_AND_CONSTRUCTOR_SET',
+            select_on = 'id',
+            constructor = 'some_constructor',
+            param = 'id'
+        )
+
+    def test_multiple_and_more_than_one_set(self):
+        self.check_for_exception_message(
+            'MULTIPLE_AND_ON_>1_SET',
+            single = False,
+            on_more_than_one = Exception,
+            param = 'id'
+        )
+
+    def test_multiple_and_check_unique(self):
+        self.check_for_exception_message(
+            'MULTIPLE_AND_CHECK_UNIQUE',
+            single = False,
+            check_unique = True,
+            param = 'id'
+        )
+
+    def test_missing_param(self):
+        self.check_for_exception_message('PARAM_NOT_SPECIFIED')
+
+    def test_param_is_not_str(self):
+        self.check_for_exception_message(
+            'PARAM_MUST_BE_STRING',
+            param = 123
+        )
+
+    def test_param_not_reinjected(self):
+        self.check_for_exception_message(
+            'CANNOT_REINJECT_OLD_PARAM',
+            param = 'id',
+            inject_old_kwarg_as = 'id'
+        )
+
+class ResolveConstructorTestCase(ParamConverterTestCase):
+    """Test ParamConverter.resolve_constructor()
+    """
     # check all the ways it's meant to go wrong...
     def test_constructor_should_not_be_callable(self):
         self.check_for_exception_message(
             'CONSTRUCTOR_SHOULD_NOT_BE_CALLABLE',
+            param = 'id',
             constructor = lambda x: x,
             graph_object = Widget
         )
@@ -58,16 +121,19 @@ class ResolveConstructorTestCase(ParamConverterTestCase):
     def test_constructor_fqn_not_found(self):
         self.check_for_exception_message(
             'CONSTRUCTOR_FQN_NOT_FOUND',
+            param = 'id',
             constructor = 'this.does.not.exist')
 
     def test_constructor_not_callable(self):
         self.check_for_exception_message(
             'CONSTRUCTOR_FQN_NOT_CALLABLE',
-            constructor = 'tests.fixtures')
+            constructor = 'tests.fixtures',
+            param = 'id')
 
     def test_constructor_attr_not_found(self):
         self.check_for_exception_message(
             'CONSTRUCTOR_ATTR_NOT_FOUND',
+            param = 'id',
             constructor = 'not_implemented',
             graph_object = Widget
         )
@@ -75,6 +141,7 @@ class ResolveConstructorTestCase(ParamConverterTestCase):
     def test_constructor_attr_not_callable(self):
         self.check_for_exception_message(
             'CONSTRUCTOR_ATTR_NOT_CALLABLE',
+            param = 'id',
             graph_object = Widget,
             constructor = '__primarykey__'
         )
@@ -82,6 +149,7 @@ class ResolveConstructorTestCase(ParamConverterTestCase):
     def test_constructor_invalid(self):
         self.check_for_exception_message(
             'INVALID_CONSTRUCTOR_ARGUMENT',
+            param = 'id',
             graph_object = Widget,
             constructor = {}
         )
@@ -89,38 +157,46 @@ class ResolveConstructorTestCase(ParamConverterTestCase):
     def test_constructor_invalid2(self):
         self.check_for_exception_message(
             'INVALID_CONSTRUCTOR_ARGUMENT',
+            param = 'id',
             constructor = 'woof'
         )
 
     def test_graph_object_and_constructor_not_set(self):
-        self.check_for_exception_message('NO_CALLABLE_CONSTRUCTOR_FOUND')
+        self.check_for_exception_message(
+            'NO_CALLABLE_CONSTRUCTOR_FOUND',
+            param = 'id',
+        )
 
     def test_default_constructor_not_found(self):
         self.check_for_exception_message(
             'DEFAULT_CONSTRUCTOR_NOT_FOUND',
-            graph_object = object()
+            graph_object = object(),
+            param = 'id'
         )
 
     # check all the ways its meant to go right
     def test_simple_object(self):
-        pc = ParamConverter(graph_object = Widget)
+        pc = ParamConverter(graph_object = Widget, param = 'id')
         assert pc.constructor == Widget.select
 
     def test_graph_object_with_constructor_attr(self):
         pc = ParamConverter(graph_object = Widget,
-                            constructor = 'custom_constructor')
+                            constructor = 'custom_constructor',
+                            param = 'id')
         assert pc.constructor == Widget.custom_constructor
 
     def test_str_to_import_with_default_constructor(self):
-        pc = ParamConverter(graph_object = 'tests.fixtures.Widget')
+        pc = ParamConverter(graph_object = 'tests.fixtures.Widget',
+                            param = 'id')
         assert pc.constructor == Widget.select
 
     def test_str_to_import_with_custom_constructor(self):
         pc = ParamConverter(graph_object = 'tests.fixtures.Widget',
-                            constructor = 'custom_constructor')
+                            constructor = 'custom_constructor',
+                            param = 'id')
         assert pc.constructor == Widget.custom_constructor
 
     def test_simple_callable(self):
         my_callable = lambda x: x
-        pc = ParamConverter(constructor = my_callable)
+        pc = ParamConverter(constructor = my_callable, param = 'id')
         assert pc.constructor == my_callable
