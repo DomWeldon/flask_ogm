@@ -27,7 +27,9 @@ class WidgetCollection(object):
     def __repr__(self):
         return repr(self.data)
 
-
+def custom_widget_finding_function(): # pragma: no cover
+    """USed to test string resolution to a callable."""
+    pass # pragma: no cover
 
 class Widget(GraphObject):
     unique_id = Property()
@@ -62,11 +64,11 @@ class Widget(GraphObject):
         return w
 
     @classmethod
-    def custom_constructor(cls, graph, property):
-        """Never runs, only used in tests that check this methos id
+    def custom_constructor(cls, graph, property): # pragma: no cover
+        """Never runs, only used in tests that check this method is
         present
         """
-        pass
+        pass # pragma: no cover
 
     @classmethod
     def return_non_iter(cls, *args, **kwargs):
@@ -83,11 +85,3 @@ class Widget(GraphObject):
             return wc
 
         return wc.where(cls, **{ cls.__primarykey__: primary_value})
-
-    @classmethod
-    def __iter__(cls):
-        """When an iterable is required, we want the resultant data
-        from the select query. In the real GraphObject, several objects
-        exist here...
-        """
-        return iter(cls.selected_data)

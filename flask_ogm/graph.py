@@ -6,7 +6,7 @@ from flask import current_app
 # import application context - safe vor pre v.09
 try:
     from flask import _app_ctx_stack as stack
-except ImportError:
+except ImportError: # pragma: no cover
     from flask import _request_ctx_stack as stack
 
 class FlaskOGMError(Exception):
@@ -45,13 +45,9 @@ class OGM(object):
         """Provided to support creation using factory method."""
         pass
 
-    def connect(self, bind=None):
+    def connect(self, bind):
         """Connect to db and create a graph object"""
         # py2neo allows > 1 graph connection
-        if bind is None:
-            # assume it's the default graph, but allow others
-            bind = self.DEFAULT_GRAPH_KEY
-
         graph_credentials = None
         config_key = self.GRAPH_CREDENTIALS_CONFIG_KEY
         if bind == self.DEFAULT_GRAPH_KEY:

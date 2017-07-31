@@ -382,4 +382,4 @@ class ParamConverter(object):
             )
 
         # code should never run past here
-        assert False
+        assert False # pragma: no cover

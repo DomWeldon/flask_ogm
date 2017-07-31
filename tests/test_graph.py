@@ -4,6 +4,30 @@ from . import *
 from .util import FlaskOGMTestCase
 
 class GraphTestCase(FlaskOGMTestCase):
+    def test_out_of_application_context_error(self):
+        app, client = self.create_test_app(
+            OGM_GRAPH_HOST = 'localhost',
+            OGM_GRAPH_USER = 'neo4j',
+            OGM_GRAPH_PASSWORD = 'password'
+        )
+        try:
+            ogm = OGM(app)
+            graph = ogm.graph
+        except OutOfApplicationContextError:
+            assert True
+        else: # pragma: no cover
+            assert False
+
+    def test_default_bind_is_assumed(self):
+        app, client = self.create_test_app(
+            OGM_GRAPH_HOST = 'localhost',
+            OGM_GRAPH_USER = 'neo4j',
+            OGM_GRAPH_PASSWORD = 'password'
+        )
+        with app.app_context():
+            ogm = OGM(app)
+            assert 'localhost' in repr(ogm.get_connection())
+
     def test_default_connection_simple_no_optional_params(self):
         app, client = self.create_test_app(
             OGM_GRAPH_HOST = 'localhost',
@@ -93,7 +117,7 @@ class GraphTestCase(FlaskOGMTestCase):
                 assert isinstance(ogm.graph, Graph)
         except GraphCredentialsIncompleteError:
             assert True
-        else:
+        else: # pragma: no cover
             assert False
 
     def test_connection_graph_credentials_not_found(self):
@@ -104,7 +128,7 @@ class GraphTestCase(FlaskOGMTestCase):
                 assert isinstance(ogm.graph, Graph)
         except GraphCredentialsNotFoundError:
             assert True
-        else:
+        else:  # pragma: no cover
             assert False
 
     def test_default_connection_unclear(self):
@@ -126,5 +150,5 @@ class GraphTestCase(FlaskOGMTestCase):
                 assert isinstance(ogm.graph, Graph)
         except DefaultGraphCredentialsUnclearError:
             assert True
-        else:
+        else: # pragma: no cover
             assert False

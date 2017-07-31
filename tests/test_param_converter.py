@@ -231,6 +231,27 @@ class MissingOrIllogicalArgumentCombinationTestCase(ParamConverterTestCase):
 class ResolveConstructorTestCase(ParamConverterTestCase):
     """Test ParamConverter.resolve_constructor()
     """
+    def test_constructor_import_reference_is_fqn(self):
+        self.check_for_exception_message(
+            'IMPORT_REFERENCES_MUST_BE_FQN',
+            param = 'id',
+            constructor = '.something'
+        )
+
+    def test_graph_object_import_reference_is_fqn(self):
+        self.check_for_exception_message(
+            'IMPORT_REFERENCES_MUST_BE_FQN',
+            param = 'id',
+            graph_object = '.something'
+        )
+
+    def test_graph_object_fqn_not_found(self):
+        self.check_for_exception_message(
+            'GRAPH_OBJECT_FQN_NOT_FOUND',
+            param = 'id',
+            graph_object = 'i.do.not.exist'
+        )
+
     # check all the ways it's meant to go wrong...
     def test_constructor_should_not_be_callable(self):
         self.check_for_exception_message(
@@ -322,3 +343,11 @@ class ResolveConstructorTestCase(ParamConverterTestCase):
         my_callable = lambda x: x
         pc = ParamConverter(constructor = my_callable, param = 'id')
         assert pc.constructor == my_callable
+
+    def test_resolve_constructor_by_string_reference(self):
+        my_callable = lambda x: x
+        pc = ParamConverter(
+            constructor = 'tests.fixtures.custom_widget_finding_function',
+            param = 'id')
+        from tests.fixtures import custom_widget_finding_function
+        assert pc.constructor == custom_widget_finding_function

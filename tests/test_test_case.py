@@ -1,7 +1,7 @@
 from py2neo import Graph
 
 from .util import Flask, FlaskOGMTestCase
-from . import OGM
+from flask_ogm import OGM
 
 class TestTestCase(FlaskOGMTestCase):
     def test_create_test_app(self):
