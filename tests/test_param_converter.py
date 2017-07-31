@@ -16,6 +16,19 @@ from .util import FlaskOGMTestCase
 from .fixtures import Widget
 
 class ParamConverterTestCase(FlaskOGMTestCase):
+    def get_app_context(self):
+        """Provided since we need an app context to test anything using
+        OGM. However, widget is designed to return dummy data, so we
+        don't ever need to connect to the db.
+        Don't worry about these config details.
+        """
+        app, client = self.create_test_app(
+            OGM_GRAPH_HOST = 'localhost',
+            OGM_GRAPH_USER = 'neo4j',
+            OGM_GRAPH_PASSWORD = 'password'
+        )
+        return app.app_context()
+
     def check_for_exception_message(self, message_key, **kwargs):
         """Check that the right exception / message is produced for
         given combination of arguments
@@ -33,6 +46,120 @@ class ParamConverterTestCase(FlaskOGMTestCase):
             # no exception produced, test fails
             assert False
 
+class CallDecoratorTestCase(ParamConverterTestCase):
+
+    @ParamConverter(graph_object = Widget, param = 'unique_id')
+    def mock_controller_kwarg_missing(self, some_arg = None):
+        pass
+
+    def test_param_missing_from_kwargs(self):
+        try:
+            self.mock_controller_kwarg_missing(widget = 1)
+        except ParamConverterIllegalArgumentException as e:
+            message = ILLEGAL_ARGUMENT_MESSAGES['PARAM_NOT_FOUND_IN_KWARGS']
+            assert message[0:len(message)] == str(e)[0:len(message)]
+        else:
+            assert False
+
+    @ParamConverter(constructor = Widget.return_non_iter, param = 'widget')
+    def mock_controller_non_iterable(self, widget = None):
+        pass
+
+    def test_constructor_returns_non_iterable(self):
+        try:
+            with self.get_app_context():
+                self.mock_controller_non_iterable(widget = 1)
+        except ParamConverterIllegalArgumentException as e:
+            message = ILLEGAL_ARGUMENT_MESSAGES[
+                'CONSTRUCTOR_MUST_RETURN_ITERABLE'
+            ]
+            assert message[0:len(message)] == str(e)[0:len(message)]
+        else:
+            assert False
+
+    @ParamConverter(constructor = Widget.mock_select, param = 'widget')
+    def mock_controller_select_simple(self, widget = None):
+        return widget
+
+    def test_select_simple(self):
+        with self.get_app_context():
+            f = Widget.MOCK_DATA[0]
+            widget = self.mock_controller_select_simple(
+                widget = f['unique_id']
+            )
+            assert widget.unique_id == f['unique_id']
+
+    @ParamConverter(constructor = Widget.mock_select, param = 'widget',
+                    select_on = 'name')
+    def mock_controller_select_on_property(self, widget = None):
+        return widget
+
+    def test_select_on_property(self):
+        with self.get_app_context():
+            widget = self.mock_controller_select_on_property(widget = 'Widget 1')
+            assert widget.name == 'Widget 1'
+
+    @ParamConverter(constructor = Widget.mock_select, param = 'widgets',
+                    single = False, select_on = 'colour')
+    def mock_controller_select_multiple(self, widgets = None):
+        return widgets
+
+    def test_select_multiple(self):
+        with self.get_app_context():
+            widgets = self.mock_controller_select_multiple(widgets = 'red')
+            assert len(widgets) == 2
+
+    @ParamConverter(constructor = Widget.mock_select, param = 'widget',
+                    on_not_found = 404)
+    def mock_controller_not_found(self, widget = None):
+        return False
+
+    def test_not_found(self):
+        with self.get_app_context():
+            widget = self.mock_controller_not_found(widget = -1)
+            assert widget == 404
+
+    @ParamConverter(constructor = Widget.mock_select, param = 'widget',
+                    check_unique = True, on_more_than_one = 500,
+                    select_on = 'colour')
+    def mock_controller_check_unique(self, widget = None):
+        return widget
+
+    def test_check_unique(self):
+        with self.get_app_context():
+            widget = self.mock_controller_check_unique(widget = 'red')
+            assert widget == 500
+
+    @ParamConverter(constructor = Widget.mock_select, param = 'widget',
+                    inject_old_kwarg_as = '_widget')
+    def mock_controller_reinject_unspecified_kwarg(self, widget = None):
+        return widget
+
+    def test_reinject_unspecified_kwarg(self):
+        try:
+            with self.get_app_context():
+                self.mock_controller_reinject_unspecified_kwarg(widget = 1)
+        except ParamConverterIllegalArgumentException as e:
+            message = ILLEGAL_ARGUMENT_MESSAGES[
+                'REINJECT_OLD_PARAM_MUST_BE_KWARG'
+            ]
+            assert message[0:len(message)] == str(e)[0:len(message)]
+        else:
+            assert False
+
+    @ParamConverter(constructor = Widget.mock_select, param = 'widget',
+                    inject_old_kwarg_as = '_widget')
+    def mock_controller_reinject_kwarg(self, widget = None, _widget = None):
+        return widget, _widget
+
+    def test_reinject_kwarg(self):
+        with self.get_app_context():
+            o, a = self.mock_controller_reinject_kwarg(widget = 1,
+                                                       _widget = None)
+            assert o.unique_id == 1
+            assert a == 1
+
+
 class CallableGeneratorsTestCase(ParamConverterTestCase):
     def test_on_more_than_one_assigned_properly(self):
         pc = ParamConverter(graph_object = Widget, single = True,
@@ -49,7 +176,9 @@ class CallableGeneratorsTestCase(ParamConverterTestCase):
     def test_with_callable(self):
         def c():
             return NotFound()
-        assert isinstance(ParamConverter.resolve_to_return_callable(c)(), NotFound)
+        assert isinstance(
+            ParamConverter.resolve_to_return_callable(c)(),
+            NotFound)
 
 class ResolveFQNToCallableTestCase(ParamConverterTestCase):
     """Tesst resolve_fqn_to_object to ensure it imports correctly
@@ -66,13 +195,6 @@ class ResolveFQNToCallableTestCase(ParamConverterTestCase):
 class MissingOrIllogicalArgumentCombinationTestCase(ParamConverterTestCase):
     """Test for bad combinations of arguments
     """
-    def test_select_on_and_constructor_set(self):
-        self.check_for_exception_message(
-            'SELECT_ON_AND_CONSTRUCTOR_SET',
-            select_on = 'id',
-            constructor = 'some_constructor',
-            param = 'id'
-        )
 
     def test_multiple_and_more_than_one_set(self):
         self.check_for_exception_message(

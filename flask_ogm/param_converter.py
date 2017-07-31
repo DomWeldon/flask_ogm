@@ -7,6 +7,8 @@ from flask import abort, current_app
 
 from .graph import OGM
 
+ogm = OGM()
+
 # One could debate whether this is pythonic - specifying all the ways the
 # tool could be called correctly and then listing each with an informative
 # error message. The aim, however, is to produce a useful - handy - little
@@ -53,11 +55,6 @@ ILLEGAL_ARGUMENT_MESSAGES = {
         'Your graph object, specified as a fully qualified string to import,'
         ' was not found: '
     ),
-    'SELECT_ON_AND_CONSTRUCTOR_SET': (
-        'You have specified a property to use in the default '
-        'constructor, but have also specified a custom constructor '
-        'too. You must choose one or the other.'
-    ),
     'MULTIPLE_AND_ON_>1_SET': (
         'You have set single = False, so requesting more than one result '
         'to be returned, however, you have also specified a status code or '
@@ -76,6 +73,20 @@ ILLEGAL_ARGUMENT_MESSAGES = {
     ),
     'CANNOT_REINJECT_OLD_PARAM': (
         'You have set the value of inject_old_kwarg_as == param'
+    ),
+    'PARAM_NOT_FOUND_IN_KWARGS': (
+        'The specified param was not found in the kwargs of the '
+        'decorated function.'
+    ),
+    'CONSTRUCTOR_MUST_RETURN_ITERABLE': (
+        'Your constructor returned did not return an iterable. Your '
+        'constructor must return an iterable even when no results are '
+        'found. Your constructor returned: '
+
+    ),
+    'REINJECT_OLD_PARAM_MUST_BE_KWARG': (
+        'The value to reinject the original value of the param must '
+        'be specified as a keyword argument in the decorated function.'
     ),
 }
 
@@ -98,11 +109,14 @@ class ParamConverter(object):
     def __init__(self, graph_object = None, constructor = None, param = None,
                  select_on = None, on_not_found = 404, bind = None,
                  check_unique = False, on_more_than_one = None, single = True,
-                 inject_old_kwarg_as = None, call_query_method = 'data'):
+                 inject_old_kwarg_as = None):
         """Decorator for Flask controllers. Will convert a parameter to
         either a GraphObject or a collection of GraphObject based on
         a query to the graph. If no object is found, it will act as
         instructed, by default, returning a 404.
+
+        Use graph_object and / or constructor to specify a constructor
+        function which takes the
 
         :param graph_object: class to return instances of, usually
                              a py2neo.ogm.GraphObject but can be custom
@@ -111,12 +125,12 @@ class ParamConverter(object):
         :param constructor: reference to the method used query the
                             graph, str or callable, if str then can be
                             either fully qualified reference to a
-                            function the attr of the graph_object
+                            function the attr of the graph_object.
         :param param: kwarg index to use to query the graph - will be
                       replaced by the return of the query
-        :param select_on: if no constructor specified, the property to
-                          query on, i.e., "__id__", if None then
-                          graph_object.__primarykey__ is used
+        :param select_on: if specified, the param will not be passed to
+                          the constructor when called, but added onto
+                          the constructor using where(select_on = x)
         :param on_not_found: what to return when no objects are found,
                              can be callable, int (HTTP status) or
                              str, if None, will return 404
@@ -124,24 +138,19 @@ class ParamConverter(object):
                                  if >1 argument is found, if None, 500
         :param bind: the bind to search using with ogm.get_connection,
                      default if None
-        :param unique: whether there should be only 1 result for the
-                       query, if false will return a
-                       list, if true will return a single GraphObject
-        :param order_by: how to order the query (and return) if unique
-                         is False
-        :param inject_old_kwarg_as: what and whether to inject the
-                                    initial value of param as into the
-                                    function, str if set, if None then
-                                    param + '_', if False then no param
-                                    injected.
+        :param check_unique: if True when single is True, will check
+                             that only 1 object is returned
+        :param inject_old_kwarg_as: if a string, the original value of
+                                    param will be injected into the
+                                    decorated function. The string must
+                                    relate to a kwarg in the decorated
+                                    function.
         :return: the function it is decorating
         """
-        # some illogical argument combinations need to be weeded out early
-        if select_on is not None and constructor is not None:
-            raise ParamConverterIllegalArgumentException(
-                ILLEGAL_ARGUMENT_MESSAGES['SELECT_ON_AND_CONSTRUCTOR_SET']
-            )
+        # save the bind
+        self.bind = bind
 
+        # some illogical argument combinations need to be weeded out early
         if single == False and on_more_than_one is not None:
             raise ParamConverterIllegalArgumentException(
                 ILLEGAL_ARGUMENT_MESSAGES['MULTIPLE_AND_ON_>1_SET']
@@ -193,25 +202,83 @@ class ParamConverter(object):
 
         # do we inject the old param?
         self.param = param
-        if inject_old_kwarg_as is None:
-            self.inject_old_kwarg_as = '_' + param
-        else:
-            self.inject_old_kwarg_as = inject_old_kwarg_as
+        self.inject_old_kwarg_as = inject_old_kwarg_as
 
-    def __call__(self, *args, **kwargs):
-        """"""
-        pass
+        self.select_on = select_on
+
+    def __call__(self, f):
+        """Make the db query and inject it into the function"""
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            # is the param in the kwargs?
+            if self.param not in kwargs:
+                raise ParamConverterIllegalArgumentException(
+                    ILLEGAL_ARGUMENT_MESSAGES['PARAM_NOT_FOUND_IN_KWARGS']
+                )
+            search_value = kwargs[self.param]
+
+            # get the graph
+            graph = ogm.get_connection(bind = self.bind)
+            if self.select_on is None:
+                q = self.constructor(graph, search_value)
+            else:
+                # use where on the default constructor
+                # spoof kwargs using dictionary unpacking
+                q = self.constructor(graph).where(**{
+                    self.select_on : search_value
+                })
+
+            # this should return an iterable
+            try:
+                d = list(q)
+            except TypeError:
+                raise ParamConverterIllegalArgumentException(
+                    ILLEGAL_ARGUMENT_MESSAGES[
+                        'CONSTRUCTOR_MUST_RETURN_ITERABLE'
+                    ]
+                    + repr(q)
+                )
+
+            # did we find anything?
+            if len(d) == 0:
+                # yes
+                return self.on_not_found()
+
+            # do we worry about having > 1 result`
+            if len(d) > 0 and self.single and self.check_unique:
+                return self.on_more_than_one()
+
+            # inject the results
+            if self.single:
+                kwargs[self.param] = d[0]
+            else:
+                kwargs[self.param] = d
+
+            # reinject old results?
+            if self.inject_old_kwarg_as is not None \
+                and self.inject_old_kwarg_as not in kwargs:
+                raise ParamConverterIllegalArgumentException(
+                    ILLEGAL_ARGUMENT_MESSAGES[
+                        'REINJECT_OLD_PARAM_MUST_BE_KWARG'
+                    ]
+                )
+            elif self.inject_old_kwarg_as is not None:
+                kwargs[self.inject_old_kwarg_as] = search_value
+
+            return f(*args, **kwargs)
+
+        return wrapper
 
     @staticmethod
-    def resolve_to_return_callable(on_not_found):
+    def resolve_to_return_callable(r):
         """Returns a callable which is called which can be called to
         provide the makings of a flask response.
         """
-        if callable(on_not_found):
-            return on_not_found
+        if callable(r):
+            return r
 
         def wrapper():
-            return on_not_found
+            return r
 
         return wrapper
 
