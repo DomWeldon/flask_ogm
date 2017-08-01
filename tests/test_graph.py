@@ -8,7 +8,7 @@ class GraphTestCase(FlaskOGMTestCase):
         app, client = self.create_test_app(
             OGM_GRAPH_HOST = 'localhost',
             OGM_GRAPH_USER = 'neo4j',
-            OGM_GRAPH_PASSWORD = 'password'
+            OGM_GRAPH_PASSWORD = 'neo4j'
         )
         try:
             ogm = OGM(app)
@@ -22,7 +22,7 @@ class GraphTestCase(FlaskOGMTestCase):
         app, client = self.create_test_app(
             OGM_GRAPH_HOST = 'localhost',
             OGM_GRAPH_USER = 'neo4j',
-            OGM_GRAPH_PASSWORD = 'password'
+            OGM_GRAPH_PASSWORD = 'neo4j'
         )
         with app.app_context():
             ogm = OGM(app)
@@ -32,7 +32,7 @@ class GraphTestCase(FlaskOGMTestCase):
         app, client = self.create_test_app(
             OGM_GRAPH_HOST = 'localhost',
             OGM_GRAPH_USER = 'neo4j',
-            OGM_GRAPH_PASSWORD = 'password'
+            OGM_GRAPH_PASSWORD = 'neo4j'
         )
         with app.app_context():
             ogm = OGM(app)
@@ -42,7 +42,7 @@ class GraphTestCase(FlaskOGMTestCase):
         app, client = self.create_test_app(
             OGM_GRAPH_HOST = 'localhost',
             OGM_GRAPH_USER = 'neo4j',
-            OGM_GRAPH_PASSWORD = 'password',
+            OGM_GRAPH_PASSWORD = 'neo4j',
             OGM_GRAPH_PORT = '7687',
             OGM_GRAPH_PROTOCOL = 'bolt'
         )
@@ -56,7 +56,7 @@ class GraphTestCase(FlaskOGMTestCase):
                 'DEFAULT': dict(
                     HOST = 'localhost',
                     USER = 'neo4j',
-                    PASSWORD = 'password'),
+                    PASSWORD = 'neo4j'),
             }
         )
         with app.app_context():
@@ -69,7 +69,7 @@ class GraphTestCase(FlaskOGMTestCase):
                 'DEFAULT': dict(
                     HOST = 'localhost',
                     USER = 'neo4j',
-                    PASSWORD = 'password',
+                    PASSWORD = 'neo4j',
                     PORT = '7687',
                     PROTOCOL = 'bolt'),
             }
@@ -84,7 +84,7 @@ class GraphTestCase(FlaskOGMTestCase):
                 'SOME_CONN': dict(
                     HOST = 'localhost',
                     USER = 'neo4j',
-                    PASSWORD = 'password'),
+                    PASSWORD = 'neo4j'),
             }
         )
         with app.app_context():
@@ -97,7 +97,7 @@ class GraphTestCase(FlaskOGMTestCase):
                 'SOME_CONN': dict(
                     HOST = 'localhost',
                     USER = 'neo4j',
-                    PASSWORD = 'password',
+                    PASSWORD = 'neo4j',
                     PORT = '7687',
                     PROTOCOL = 'bolt'),
             }
@@ -136,12 +136,12 @@ class GraphTestCase(FlaskOGMTestCase):
             app, client = self.create_test_app(
                 OGM_GRAPH_HOST = 'localhost',
                 OGM_GRAPH_USER = 'neo4j',
-                OGM_GRAPH_PASSWORD = 'password',
+                OGM_GRAPH_PASSWORD = 'neo4j',
                 OGM_GRAPH_CREDENTIALS = {
                     'DEFAULT': dict(
                         HOST = 'localhost',
                         USER = 'neo4j',
-                        PASSWORD = 'password'),
+                        PASSWORD = 'neo4j'),
                 }
 
             ) # no password
