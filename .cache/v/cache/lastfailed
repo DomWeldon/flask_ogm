@@ -1,6 +1,4 @@
 {
-  "flask_ogm_env/lib/python3.5/site-packages/wheel/test/test_basic.py::test_pydist": true,
-  "flask_ogm_env/lib/python3.5/site-packages/wheel/test/test_tool.py::test_keygen": true,
   "tests/test_graph.py::GraphTestCase::test_bound_connection_all_params": true,
   "tests/test_graph.py::GraphTestCase::test_bound_connection_no_optional_params": true,
   "tests/test_graph.py::GraphTestCase::test_default_bind_is_assumed": true,
