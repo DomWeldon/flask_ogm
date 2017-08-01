@@ -4,4 +4,4 @@ flask_ogm/__pycache__
 test/__pycache__
 *.py[cod]
 .coverage
-htmlcover/
+htmlcov/

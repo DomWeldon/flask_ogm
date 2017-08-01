@@ -3,3 +3,4 @@ flask
 Sphinx
 coverage
 nose
+python-coveralls
