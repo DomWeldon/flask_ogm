@@ -1,5 +1,6 @@
 from py2neo.ogm import GraphObject, Property
 
+
 class WidgetCollection(object):
     def __init__(self, *args, **kwargs):
         self.data = list(*args, **kwargs)
@@ -27,14 +28,16 @@ class WidgetCollection(object):
     def __repr__(self):
         return repr(self.data)
 
-def custom_widget_finding_function(): # pragma: no cover
-    """USed to test string resolution to a callable."""
-    pass # pragma: no cover
+
+def custom_widget_finding_function():  # pragma: no cover
+    """Used to test string resolution to a callable."""
+    pass  # pragma: no cover
+
 
 class Widget(GraphObject):
     unique_id = Property()
     name = Property()
-    colour = Property()
+    colour = Property()  # I'm British: this is the correct spelling :P
     __primarykey__ = 'unique_id'
     MOCK_DATA = [
         {
@@ -64,11 +67,11 @@ class Widget(GraphObject):
         return w
 
     @classmethod
-    def custom_constructor(cls, graph, property): # pragma: no cover
+    def custom_constructor(cls, graph, property):  # pragma: no cover
         """Never runs, only used in tests that check this method is
         present
         """
-        pass # pragma: no cover
+        pass  # pragma: no cover
 
     @classmethod
     def return_non_iter(cls, *args, **kwargs):
@@ -78,10 +81,10 @@ class Widget(GraphObject):
         return None
 
     @classmethod
-    def mock_select(cls, graph, primary_value = None):
+    def mock_select(cls, graph, primary_value=None):
         """Mock select method to return iterables for tests"""
         wc = WidgetCollection([cls.mock_wrap(w) for w in cls.MOCK_DATA])
         if primary_value is None:
             return wc
 
-        return wc.where(cls, **{ cls.__primarykey__: primary_value})
+        return wc.where(cls, **{cls.__primarykey__: primary_value})
