@@ -2,7 +2,6 @@ py2neo
 flask
 Sphinx
 coverage
-nose
 pytest
 pytest-cov
 python-coveralls
