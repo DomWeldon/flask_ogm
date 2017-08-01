@@ -13,7 +13,7 @@ class TestTestCase(FlaskOGMTestCase):
         app, client = self.create_test_app(
             OGM_GRAPH_HOST = 'localhost',
             OGM_GRAPH_USER = 'neo4j',
-            OGM_GRAPH_PASSWORD = 'neo4j',
+            OGM_GRAPH_PASSWORD = 'password',
             OGM_GRAPH_PROTOCOL = 'http',
             OGM_GRAPH_PORT = '7474'
         )

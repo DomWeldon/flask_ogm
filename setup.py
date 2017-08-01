@@ -35,5 +35,8 @@ setup(
         'Programming Language :: Python',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
         'Topic :: Software Development :: Libraries :: Python Modules',
-    ]
+    ],
+    test_suite='py.test',
+    tests_require=['pytest'],
+    setup_requires=['pytest-runner']
 )
