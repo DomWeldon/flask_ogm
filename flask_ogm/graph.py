@@ -6,22 +6,34 @@ from flask import current_app
 # import application context - safe vor pre v.09
 try:
     from flask import _app_ctx_stack as stack
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     from flask import _request_ctx_stack as stack
+
 
 class FlaskOGMError(Exception):
     """Base class for errors in this module."""
     pass
 
-class GraphCredentialsIncompleteError(FlaskOGMError): pass
-class GraphCredentialsNotFoundError(FlaskOGMError): pass
-class OutOfApplicationContextError(FlaskOGMError): pass
-class DefaultGraphCredentialsUnclearError(FlaskOGMError): pass
+
+class GraphCredentialsIncompleteError(FlaskOGMError):
+    pass
+
+
+class GraphCredentialsNotFoundError(FlaskOGMError):
+    pass
+
+
+class OutOfApplicationContextError(FlaskOGMError):
+    pass
+
+
+class DefaultGraphCredentialsUnclearError(FlaskOGMError):
+    pass
+
 
 class OGM(object):
     """Extension to add OGM and py2neo support.
     """
-
 
     DEFAULT_GRAPH_KEY = 'DEFAULT'
     GRAPH_CREDENTIALS_CONFIG_KEY = 'OGM_GRAPH_CREDENTIALS'
@@ -36,7 +48,7 @@ class OGM(object):
     }
     DEFAULT_GRAPH_SIMPLE_CREDENTIALS_PREFIX = 'OGM_GRAPH'
 
-    def __init__(self, app = None):
+    def __init__(self, app=None):
         self.app = app
         if app is not None:
             self.init_app(app)

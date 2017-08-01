@@ -1,21 +1,11 @@
 from functools import wraps
 import inspect
 
-from flask import abort, current_app
-
-# import application context - safe vor pre v.09
-
 from .graph import OGM
+
 
 ogm = OGM()
 
-# One could debate whether this is pythonic - specifying all the ways the
-# tool could be called correctly and then listing each with an informative
-# error message. The aim, however, is to produce a useful - handy - little
-# method that fits lots of use cases. The error messages here provide useful
-# references for unit tests, and hopefully will guide users when having made
-# an error. They should also reveal the thinking behind any bugs which are
-# not picked up in tests, making for an easier fix.
 ILLEGAL_ARGUMENT_MESSAGES = {
     'CONSTRUCTOR_SHOULD_NOT_BE_CALLABLE': (
         'Constructor cannot be callable when graph_object '
@@ -90,14 +80,18 @@ ILLEGAL_ARGUMENT_MESSAGES = {
     ),
 }
 
-class ParamConverterIllegalArgumentException(ValueError): pass
+
+class ParamConverterIllegalArgumentException(ValueError):
+    pass
+
 
 def resolve_fqn_to_object(fqn):
     """Resolve a string to a callable
     """
     module_name, dot, class_name = fqn.rpartition('.')
-    module = __import__(module_name, fromlist = [class_name])
+    module = __import__(module_name, fromlist=[class_name])
     return getattr(module, class_name)
+
 
 class ParamConverter(object):
     """Convert function arguments which contain lookup values
@@ -106,10 +100,10 @@ class ParamConverter(object):
 
     DEFAULT_CONSTRUCTOR_METHOD = 'select'
 
-    def __init__(self, graph_object = None, constructor = None, param = None,
-                 select_on = None, on_not_found = 404, bind = None,
-                 check_unique = False, on_more_than_one = None, single = True,
-                 inject_old_kwarg_as = None):
+    def __init__(self, graph_object=None, constructor=None, param=None,
+                 select_on=None, on_not_found=404, bind=None,
+                 check_unique=False, on_more_than_one=None, single=True,
+                 inject_old_kwarg_as=None):
         """Decorator for Flask controllers. Will convert a parameter to
         either a GraphObject or a collection of GraphObject based on
         a query to the graph. If no object is found, it will act as
@@ -151,12 +145,12 @@ class ParamConverter(object):
         self.bind = bind
 
         # some illogical argument combinations need to be weeded out early
-        if single == False and on_more_than_one is not None:
+        if not single and on_more_than_one is not None:
             raise ParamConverterIllegalArgumentException(
                 ILLEGAL_ARGUMENT_MESSAGES['MULTIPLE_AND_ON_>1_SET']
             )
 
-        if single == False and check_unique == True:
+        if not single and check_unique:
             raise ParamConverterIllegalArgumentException(
                 ILLEGAL_ARGUMENT_MESSAGES['MULTIPLE_AND_CHECK_UNIQUE']
             )
@@ -179,8 +173,8 @@ class ParamConverter(object):
         # work out the constructor
         # we only need the constructor
         self.constructor = self.resolve_constructor(
-            constructor = constructor,
-            graph_object = graph_object)
+            constructor=constructor,
+            graph_object=graph_object)
 
         # work out the return type - is it a list or a single value?
         self.single = bool(single)
@@ -189,7 +183,7 @@ class ParamConverter(object):
         self.on_not_found = self.resolve_to_return_callable(on_not_found)
 
         # do we worry if we find > 1 node?
-        if single == True and check_unique == True:
+        if single and check_unique:
             # yes
             if on_more_than_one is not None:
                 omto = self.resolve_to_return_callable(on_more_than_one)
@@ -218,14 +212,14 @@ class ParamConverter(object):
             search_value = kwargs[self.param]
 
             # get the graph
-            graph = ogm.get_connection(bind = self.bind)
+            graph = ogm.get_connection(bind=self.bind)
             if self.select_on is None:
                 q = self.constructor(graph, search_value)
             else:
                 # use where on the default constructor
                 # spoof kwargs using dictionary unpacking
                 q = self.constructor(graph).where(**{
-                    self.select_on : search_value
+                    self.select_on: search_value
                 })
 
             # this should return an iterable
@@ -256,7 +250,7 @@ class ParamConverter(object):
 
             # reinject old results?
             if self.inject_old_kwarg_as is not None \
-                and self.inject_old_kwarg_as not in kwargs:
+               and self.inject_old_kwarg_as not in kwargs:
                 raise ParamConverterIllegalArgumentException(
                     ILLEGAL_ARGUMENT_MESSAGES[
                         'REINJECT_OLD_PARAM_MUST_BE_KWARG'
@@ -282,7 +276,7 @@ class ParamConverter(object):
 
         return wrapper
 
-    def resolve_constructor(self, constructor = None, graph_object = None):
+    def resolve_constructor(self, constructor=None, graph_object=None):
         """Works out the constructor method to be used to run the query
         """
         # is the graph object a string ref?
@@ -381,4 +375,4 @@ class ParamConverter(object):
             )
 
         # code should never run past here
-        assert False # pragma: no cover
+        assert False  # pragma: no cover
