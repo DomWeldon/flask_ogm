@@ -1,0 +1,232 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Graph Connections &#8212; Flask-OGM 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ParamConverter" href="param_converter.html" />
+    <link rel="prev" title="Installation" href="install.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="graph-connections">
+<span id="id1"></span><h1>Graph Connections<a class="headerlink" href="#graph-connections" title="Permalink to this headline">¶</a></h1>
+<p>Flask-OGM supports single or multiple connections to neo4j graph databases. There is a concept of a ‘default’ connection, which can always be referenced through <code class="docutils literal"><span class="pre">ogm.graph</span></code>, and which is be used as the connection in web tools unless explicitly stated otherwise.</p>
+<p>An address and authentication details - herein termed “Graph Credentials” - must be provided for every database: the host, user and password are required for every connection. The specified port and protocol are optional; by default, <code class="docutils literal"><span class="pre">bolt</span></code> on port <code class="docutils literal"><span class="pre">7687</span></code> is assumed when optional graph credentials are not passed.</p>
+<p>Access to all graphs is provided by <a class="reference external" href="http://py2neo.org/v3/database.html#the-graph">py2neo.database.Graph</a> objects.</p>
+<p>The default database exists since, in most use cases, it is envisaged that applications will employ only one database. You can therefore set the graph credentials for the default connection as top-level configuration directives in <code class="docutils literal"><span class="pre">app.config</span></code>, whilst connections to other databases must be specified in <code class="docutils literal"><span class="pre">app.config['OGM_GRAPH_CREDENTIALS']</span></code> as a dictionary of dictionaries.</p>
+<p>Every reference to a graph has a name, which is referred to its <code class="docutils literal"><span class="pre">bind</span></code>. In the <code class="docutils literal"><span class="pre">OGM_GRAPH_CREDENTIALS</span></code> dictionary, credentials for each connection should be specified as a dictionary, with its bing as they key (see <a class="reference internal" href="#multiple-connections-binds"><span class="std std-ref">Multiple Connections (binds)</span></a>). The default connection’s graph credentials can also be specified in this way, under the bind <code class="docutils literal"><span class="pre">DEFAULT</span></code>. However, if default graph credentials are specified both as a bind and as individual top-level configuration directives, a  <a class="reference internal" href="errors.html#default-graph-credentials-unclear-error"><span class="std std-ref">DefaultGraphCredentialsUnclearError</span></a> will be raised.</p>
+<p>Since binds are dictionary keys, a bind can be any hashable value.</p>
+<p>Examples relating to the above are provided below.</p>
+<div class="section" id="single-default-connection">
+<span id="specifying-default-simple"></span><h2>Single (Default) Connection<a class="headerlink" href="#single-default-connection" title="Permalink to this headline">¶</a></h2>
+<p>The simplest way to connect to a single graph is as below. Optional parameters are included with their default values.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
+<span class="kn">from</span> <span class="nn">flask_ogm</span> <span class="k">import</span> <span class="n">OGM</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;Flask OGM Single Connection Test App&#39;</span><span class="p">)</span>
+
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;OGM_GRAPH_HOST&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;localhost&#39;</span>
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;OGM_GRAPH_USER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;neo4j&#39;</span>
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;OGM_GRAPH_PASSWORD&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;password&#39;</span>
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;OGM_GRAPH_PROTOCOL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;bolt&#39;</span> <span class="c1"># optional</span>
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;OGM_GRAPH_PORT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;7687&#39;</span> <span class="c1"># optional, can be string or int</span>
+
+<span class="n">ogm</span> <span class="o">=</span> <span class="n">OGM</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/count&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">count</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Get counts from both graphs.&quot;&quot;&quot;</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="s1">&#39;MATCH (n) RETURN COUNT(n) AS node_count&#39;</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">ogm</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">evaluate</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="multiple-connections-binds">
+<span id="id2"></span><h2>Multiple Connections (binds)<a class="headerlink" href="#multiple-connections-binds" title="Permalink to this headline">¶</a></h2>
+<p>On occasion, an application will need to use more than one database. These can be specified using binds like the example below.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">jsonify</span>
+<span class="kn">from</span> <span class="nn">flask_ogm</span> <span class="k">import</span> <span class="n">OGM</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;Flask OGM Multiple Connection Test App&#39;</span><span class="p">)</span>
+<span class="c1"># set config using binds</span>
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;OGM_GRAPH_CREDENTIALS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;LOCAL&#39;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s1">&#39;HOST&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;USER&#39;</span><span class="p">:</span> <span class="s1">&#39;neo4j&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;PASSWORD&#39;</span><span class="p">:</span> <span class="s1">&#39;password&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;PROTOCOL&#39;</span><span class="p">:</span> <span class="s1">&#39;bolt&#39;</span><span class="p">,</span> <span class="c1"># optional</span>
+      <span class="s1">&#39;PORT&#39;</span><span class="p">:</span> <span class="s1">&#39;7687&#39;</span><span class="p">,</span> <span class="c1"># optional</span>
+    <span class="p">},</span>
+    <span class="s1">&#39;REMOTE&#39;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s1">&#39;HOST&#39;</span><span class="p">:</span> <span class="s1">&#39;remote.example.com&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;USER&#39;</span><span class="p">:</span> <span class="s1">&#39;remote_user&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;PASSWORD&#39;</span><span class="p">:</span> <span class="s1">&#39;remote_password&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;PROTOCOL&#39;</span><span class="p">:</span> <span class="s1">&#39;http&#39;</span><span class="p">,</span> <span class="c1"># non-default value</span>
+      <span class="s1">&#39;PORT&#39;</span><span class="p">:</span> <span class="s1">&#39;7473&#39;</span><span class="p">,</span> <span class="c1"># non-default value</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+<span class="c1"># registr app</span>
+<span class="n">ogm</span> <span class="o">=</span> <span class="n">OGM</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/counts&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">counts</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Get counts from both graphs.&quot;&quot;&quot;</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="s1">&#39;MATCH (n) RETURN COUNT(n) AS node_count&#39;</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span>
+        <span class="s1">&#39;remote&#39;</span><span class="p">:</span> <span class="n">ogm</span><span class="o">.</span><span class="n">get_connection</span><span class="p">(</span><span class="n">bind</span> <span class="o">=</span> <span class="s1">&#39;REMOTE&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(),</span>
+        <span class="s1">&#39;local&#39;</span><span class="p">:</span> <span class="n">ogm</span><span class="o">.</span><span class="n">get_connection</span><span class="p">(</span><span class="n">bind</span> <span class="o">=</span> <span class="s1">&#39;LOCAL&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(),</span>
+    <span class="p">})</span>
+</pre></div>
+</div>
+<div class="section" id="specifying-the-default-connection-as-a-bind">
+<h3>Specifying the Default Connection as a Bind<a class="headerlink" href="#specifying-the-default-connection-as-a-bind" title="Permalink to this headline">¶</a></h3>
+<p>The default connection can also be set in this way, using the bind <code class="docutils literal"><span class="pre">DEFAULT</span></code>, as in the example below.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">jsonify</span>
+<span class="kn">from</span> <span class="nn">flask_ogm</span> <span class="k">import</span> <span class="n">OGM</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;Flask OGM Default as Bind Connection Test App&#39;</span><span class="p">)</span>
+<span class="c1"># set default config using bind</span>
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;OGM_GRAPH_CREDENTIALS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;DEFAULT&#39;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s1">&#39;HOST&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;USER&#39;</span><span class="p">:</span> <span class="s1">&#39;neo4j&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;PASSWORD&#39;</span><span class="p">:</span> <span class="s1">&#39;password&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;PROTOCOL&#39;</span><span class="p">:</span> <span class="s1">&#39;bolt&#39;</span><span class="p">,</span> <span class="c1"># optional</span>
+      <span class="s1">&#39;PORT&#39;</span><span class="p">:</span> <span class="s1">&#39;7687&#39;</span><span class="p">,</span> <span class="c1"># optional</span>
+    <span class="p">},</span>
+    <span class="s1">&#39;REMOTE&#39;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s1">&#39;HOST&#39;</span><span class="p">:</span> <span class="s1">&#39;remote.example.com&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;USER&#39;</span><span class="p">:</span> <span class="s1">&#39;remote_user&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;PASSWORD&#39;</span><span class="p">:</span> <span class="s1">&#39;remote_password&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;PROTOCOL&#39;</span><span class="p">:</span> <span class="s1">&#39;http&#39;</span><span class="p">,</span> <span class="c1"># non-default value</span>
+      <span class="s1">&#39;PORT&#39;</span><span class="p">:</span> <span class="s1">&#39;7473&#39;</span><span class="p">,</span> <span class="c1"># non-default value</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+<span class="c1"># register app</span>
+<span class="n">ogm</span> <span class="o">=</span> <span class="n">OGM</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/counts&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">counts</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Get counts from both graphs.&quot;&quot;&quot;</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="s1">&#39;MATCH (n) RETURN COUNT(n) AS node_count&#39;</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span>
+        <span class="s1">&#39;remote&#39;</span><span class="p">:</span> <span class="n">ogm</span><span class="o">.</span><span class="n">get_connection</span><span class="p">(</span><span class="n">bind</span> <span class="o">=</span> <span class="s1">&#39;REMOTE&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(),</span>
+        <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="n">ogm</span><span class="o">.</span><span class="n">get_connection</span><span class="p">(</span><span class="n">bind</span> <span class="o">=</span> <span class="s1">&#39;DEFAULT&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(),</span>
+    <span class="p">})</span>
+</pre></div>
+</div>
+<p>If the default connection is specified in this way whilst any of the top-level default graph settings are provided, a <code class="docutils literal"><span class="pre">DefaultGraphCredentialsUnclearError</span></code> will be raised.</p>
+</div>
+</div>
+<div class="section" id="accessing-graph-connections">
+<h2>Accessing Graph Connections<a class="headerlink" href="#accessing-graph-connections" title="Permalink to this headline">¶</a></h2>
+<p>Graphs can be accessed using <code class="docutils literal"><span class="pre">ogm.get_connection()</span></code>. If no bind is specified, the default bind is assumed.</p>
+<p>For convenience, the property <code class="docutils literal"><span class="pre">ogm.graph</span></code> is provided to access the default graph, and it is envisaged that most use cases will use this property.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Flask-OGM</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Graph Connections</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#single-default-connection">Single (Default) Connection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multiple-connections-binds">Multiple Connections (binds)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#specifying-the-default-connection-as-a-bind">Specifying the Default Connection as a Bind</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#accessing-graph-connections">Accessing Graph Connections</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="param_converter.html">ParamConverter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Index of Errors</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="install.html" title="previous chapter">Installation</a></li>
+      <li>Next: <a href="param_converter.html" title="next chapter">ParamConverter</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Dom Weldon.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/graph.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -27,7 +27,7 @@ The password for this user.
 Port number to connect to the host on. The value provided is converted to a string using ``str.format`` and so can be specified as either an integer or a string.
 
 ``OGM_GRAPH_PROTOCOL``
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 *Optional*: defaults to ``bolt``
 
@@ -62,4 +62,4 @@ A dictionary of dictionaries containing the graph credentials of the different c
   }
 
 
-The default graph connection's credentials can be specified in this way (so long as they are not also specified as simple top level parameters), but not accessed in this way if specified as simple credentials. See :ref:`graph_credentials`
+The default graph connection's credentials can be specified in this way (so long as they are not also specified as simple top level parameters), but not accessed in this way if specified as simple credentials. See :ref:`graph_connections`

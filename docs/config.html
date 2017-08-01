@@ -1,0 +1,172 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Configuration &#8212; Flask-OGM 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Index of Errors" href="errors.html" />
+    <link rel="prev" title="ParamConverter" href="param_converter.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="configuration">
+<h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
+<p>A list of all configuration values is provided below for reference.</p>
+<div class="section" id="simple-default-graph-credentials">
+<h2>Simple Default Graph Credentials<a class="headerlink" href="#simple-default-graph-credentials" title="Permalink to this headline">¶</a></h2>
+<p>Used to quickly and conveniently specify graph credentials for the default graph.</p>
+<div class="section" id="ogm-graph-host">
+<h3><code class="docutils literal"><span class="pre">OGM_GRAPH_HOST</span></code><a class="headerlink" href="#ogm-graph-host" title="Permalink to this headline">¶</a></h3>
+<p>The hostname or IP address of the default graph database to connect to.</p>
+</div>
+<div class="section" id="ogm-graph-password">
+<h3><code class="docutils literal"><span class="pre">OGM_GRAPH_PASSWORD</span></code><a class="headerlink" href="#ogm-graph-password" title="Permalink to this headline">¶</a></h3>
+<p>The password for this user.</p>
+</div>
+<div class="section" id="ogm-graph-port">
+<h3><code class="docutils literal"><span class="pre">OGM_GRAPH_PORT</span></code><a class="headerlink" href="#ogm-graph-port" title="Permalink to this headline">¶</a></h3>
+<p><em>Optional</em>: defaults to <code class="docutils literal"><span class="pre">7687</span></code></p>
+<p>Port number to connect to the host on. The value provided is converted to a string using <code class="docutils literal"><span class="pre">str.format</span></code> and so can be specified as either an integer or a string.</p>
+</div>
+<div class="section" id="ogm-graph-protocol">
+<h3><code class="docutils literal"><span class="pre">OGM_GRAPH_PROTOCOL</span></code><a class="headerlink" href="#ogm-graph-protocol" title="Permalink to this headline">¶</a></h3>
+<p><em>Optional</em>: defaults to <code class="docutils literal"><span class="pre">bolt</span></code></p>
+<p>Other supported protocols are: <code class="docutils literal"><span class="pre">http</span></code>.</p>
+</div>
+<div class="section" id="ogm-graph-user">
+<h3><code class="docutils literal"><span class="pre">OGM_GRAPH_USER</span></code><a class="headerlink" href="#ogm-graph-user" title="Permalink to this headline">¶</a></h3>
+<p>Username to provide for authentication to the database.</p>
+</div>
+</div>
+<div class="section" id="graph-credentials-in-binds">
+<h2>Graph Credentials in Binds<a class="headerlink" href="#graph-credentials-in-binds" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ogm-graph-credentials">
+<h3><code class="docutils literal"><span class="pre">OGM_GRAPH_CREDENTIALS</span></code><a class="headerlink" href="#ogm-graph-credentials" title="Permalink to this headline">¶</a></h3>
+<p>A dictionary of dictionaries containing the graph credentials of the different connections used. The dictionary should take the form below:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;OGM_GRAPH_CREDENTIALS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;BIND_NAME&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;HOST&#39;</span><span class="p">:</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;USER&#39;</span><span class="p">:</span> <span class="s1">&#39;neo4j&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;PASSWORD&#39;</span><span class="p">:</span> <span class="s1">&#39;password&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;PORT&#39;</span><span class="p">:</span> <span class="s1">&#39;7687&#39;</span><span class="p">,</span> <span class="c1"># optional</span>
+        <span class="s1">&#39;PROTOCOL&#39;</span><span class="p">:</span> <span class="s1">&#39;bolt&#39;</span><span class="p">,</span> <span class="c1"># optional</span>
+    <span class="p">},</span>
+    <span class="c1"># ..</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The default graph connection’s credentials can be specified in this way (so long as they are not also specified as simple top level parameters), but not accessed in this way if specified as simple credentials. See <a class="reference internal" href="graph.html#graph-connections"><span class="std std-ref">Graph Connections</span></a></p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Flask-OGM</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph.html">Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="param_converter.html">ParamConverter</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#simple-default-graph-credentials">Simple Default Graph Credentials</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ogm-graph-host"><code class="docutils literal"><span class="pre">OGM_GRAPH_HOST</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ogm-graph-password"><code class="docutils literal"><span class="pre">OGM_GRAPH_PASSWORD</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ogm-graph-port"><code class="docutils literal"><span class="pre">OGM_GRAPH_PORT</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ogm-graph-protocol"><code class="docutils literal"><span class="pre">OGM_GRAPH_PROTOCOL</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ogm-graph-user"><code class="docutils literal"><span class="pre">OGM_GRAPH_USER</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#graph-credentials-in-binds">Graph Credentials in Binds</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ogm-graph-credentials"><code class="docutils literal"><span class="pre">OGM_GRAPH_CREDENTIALS</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Index of Errors</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="param_converter.html" title="previous chapter">ParamConverter</a></li>
+      <li>Next: <a href="errors.html" title="next chapter">Index of Errors</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Dom Weldon.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/config.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

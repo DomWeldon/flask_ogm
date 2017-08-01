@@ -1,0 +1,168 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Installation &#8212; Flask-OGM 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Graph Connections" href="graph.html" />
+    <link rel="prev" title="Flask-OGM: documentation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>You can install Flask-OGM by adding it to your project and initializing it like a standard module off github.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ pip install -e git+git@github.com:DomWeldon/flask-ogm.git
+</pre></div>
+</div>
+<div class="section" id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<p>You can now create an application and access your graph using the <code class="docutils literal"><span class="pre">ogm.graph</span></code> interface. You must specify the connection credentials in your application’s configuration, port and protocol are optional, but host, user and password are required.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
+<span class="kn">from</span> <span class="nn">flask_ogm</span> <span class="k">import</span> <span class="n">OGM</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;Flask-OGM Quick Start Test App&#39;</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+  <span class="n">OGM_GRAPH_HOST</span> <span class="o">=</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
+  <span class="n">OGM_GRAPH_USER</span> <span class="o">=</span> <span class="s1">&#39;neo4j&#39;</span><span class="p">,</span>
+  <span class="n">OGM_GRAPH_PASSWORD</span> <span class="o">=</span> <span class="s1">&#39;password&#39;</span>
+<span class="p">)</span>
+<span class="n">ogm</span> <span class="o">=</span> <span class="n">OGM</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/count&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">node_count</span><span class="p">():</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+      <span class="s1">&#39;MATCH (n) RETURN COUNT (n) AS node_count&#39;</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">evaluate</span><span class="p">())</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Copy the above into an application (changing the configuration as required), and navigate to <a class="reference external" href="http://localhost:5000/count">http://localhost:5000/count</a> to see the count of the number of nodes in your database.</p>
+<p>To configure your connection(s) to your graph(s) with more precision, see <a class="reference internal" href="graph.html#graph-connections"><span class="std std-ref">Graph Connections</span></a>.</p>
+</div>
+<div class="section" id="registering-flask-ogm-in-your-app">
+<h2>Registering Flask-OGM in your App<a class="headerlink" href="#registering-flask-ogm-in-your-app" title="Permalink to this headline">¶</a></h2>
+<p>You can register Flask-OGM in your app using either the standard method as shown in the Quick Start, or the factory method like below.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="go">&gt;&gt;&gt;&gt; from flask import Flask</span>
+<span class="go">&gt;&gt;&gt;&gt; from flask_ogm import OGM</span>
+<span class="go">&gt;&gt;&gt;&gt; app = Flask(&#39;Flask-OGM Factory Method Test App&#39;)</span>
+<span class="go">&gt;&gt;&gt;&gt; ogm = OGM()</span>
+<span class="go">&gt;&gt;&gt;&gt; ogm.init_app(app)</span>
+<span class="go">&gt;&gt;&gt;&gt; app.config.update(</span>
+<span class="go">  OGM_GRAPH_HOST = &#39;localhost&#39;,</span>
+<span class="go">  OGM_GRAPH_USER = &#39;neo4j&#39;,</span>
+<span class="go">  OGM_GRAPH_PASSWORD = &#39;password&#39;</span>
+<span class="go">)</span>
+<span class="go">&gt;&gt;&gt;&gt; with app.app_context():</span>
+<span class="go">        print(ogm.graph.run(</span>
+<span class="go">          &#39;MATCH (n) RETURN COUNT(n) AS node_count&#39;</span>
+<span class="go">        ).evaluate())</span>
+
+<span class="go">1,234</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Flask-OGM</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#quick-start">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#registering-flask-ogm-in-your-app">Registering Flask-OGM in your App</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="graph.html">Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="param_converter.html">ParamConverter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Index of Errors</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Flask-OGM: documentation</a></li>
+      <li>Next: <a href="graph.html" title="next chapter">Graph Connections</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Dom Weldon.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/install.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
