@@ -1,0 +1,20 @@
+{
+  "flask_ogm_env/lib/python3.5/site-packages/wheel/test/test_basic.py::test_pydist": true,
+  "flask_ogm_env/lib/python3.5/site-packages/wheel/test/test_tool.py::test_keygen": true,
+  "tests/test_graph.py::GraphTestCase::test_bound_connection_all_params": true,
+  "tests/test_graph.py::GraphTestCase::test_bound_connection_no_optional_params": true,
+  "tests/test_graph.py::GraphTestCase::test_default_bind_is_assumed": true,
+  "tests/test_graph.py::GraphTestCase::test_default_connection_bound_all_params": true,
+  "tests/test_graph.py::GraphTestCase::test_default_connection_bound_no_optional_params": true,
+  "tests/test_graph.py::GraphTestCase::test_default_connection_simple_all_params": true,
+  "tests/test_graph.py::GraphTestCase::test_default_connection_simple_no_optional_params": true,
+  "tests/test_param_converter.py::CallDecoratorTestCase::test_check_unique": true,
+  "tests/test_param_converter.py::CallDecoratorTestCase::test_constructor_returns_non_iterable": true,
+  "tests/test_param_converter.py::CallDecoratorTestCase::test_not_found": true,
+  "tests/test_param_converter.py::CallDecoratorTestCase::test_reinject_kwarg": true,
+  "tests/test_param_converter.py::CallDecoratorTestCase::test_reinject_unspecified_kwarg": true,
+  "tests/test_param_converter.py::CallDecoratorTestCase::test_select_multiple": true,
+  "tests/test_param_converter.py::CallDecoratorTestCase::test_select_on_property": true,
+  "tests/test_param_converter.py::CallDecoratorTestCase::test_select_simple": true,
+  "tests/test_test_case.py::TestTestCase::test_factory_method_creation": true
+}
