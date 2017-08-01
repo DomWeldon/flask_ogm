@@ -23,6 +23,7 @@ script:
 
 services:
   - neo4j
+  - curl
 
 after_success:
   - coveralls
