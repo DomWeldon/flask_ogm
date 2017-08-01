@@ -2,3 +2,4 @@ py2neo
 flask
 Sphinx
 coverage
+nose

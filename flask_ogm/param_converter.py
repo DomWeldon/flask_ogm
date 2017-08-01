@@ -317,7 +317,6 @@ class ParamConverter(object):
         # no, is it string reference to a callable?
         if isinstance(constructor, str) and '.' in constructor:
             try:
-                # copy py2neo code here
                 resolved_object = resolve_fqn_to_object(constructor)
             except ImportError:
                 # reference not found
