@@ -10,7 +10,7 @@ from setuptools import setup
 setup(
     name='Flask-OGM',
     version='1.0',
-    url='https://github.com/DomWeldon/flask-ogm',
+    url='http://www.flask-ogm.org',
     license='BSD',
     author='Dom Weldon',
     author_email='dom.weldon@gmail.com',
