@@ -241,7 +241,7 @@ class ParamConverter(object):
 
             # did we find anything?
             if len(d) == 0:
-                # yes
+                # no
                 return self.on_not_found()
 
             # do we worry about having > 1 result`
