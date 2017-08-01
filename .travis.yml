@@ -13,12 +13,13 @@ python:
 # command to install dependencies
 install:
   - "pip install -r requirements.txt"
+
+# command to run tests
+script:
   - >-
     $ curl -H "Content-Type: application/json" -X POST -d '{"password":"password"}' -u neo4j:neo4j http://localhost:7474/user/neo4j/password
 
-
-# command to run tests
-script: py.test --cov=flask_ogm tests/
+  - py.test --cov=flask_ogm tests/
 
 services:
   - neo4j
