@@ -1,10 +1,7 @@
 import json
 from unittest import TestCase
-from werkzeug.exceptions import NotFound
 
-from flask_ogm import OGM
-
-from examples.movie_app import app, ogm
+from examples.movie_app import app
 
 """
 ALL TESTS HEREIN RELY ON THE SMALL MOVIE GRAPH BEING ACCESSIBLE IN A
@@ -17,20 +14,22 @@ class MovieAppTestCase(TestCase):
         self.app = app
         self.app.config['TESTING'] = True
         self.client = self.app.test_client()
+
     def test_count_movies(self):
         with self.app.app_context():
             r = self.app.test_client().get('/count/movies')
             d = json.loads(r.get_data(as_text=True))
             assert d == {
-                'primary_label': 'Movie',
+                'primary_label': u'Movie',
                 'total': 38
             }
+
     def test_count_people(self):
         with self.app.app_context():
             r = self.app.test_client().get('/count/people')
             d = json.loads(r.get_data(as_text=True))
             assert d == {
-                'primary_label': 'Person',
+                'primary_label': u'Person',
                 'total': 131
             }
 

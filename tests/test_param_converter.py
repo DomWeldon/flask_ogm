@@ -124,12 +124,11 @@ class CallDecoratorTestCase(ParamConverterTestCase):
     def test_not_found(self):
         with self.get_app_context():
             try:
-                widget = self.mock_controller_not_found(widget=-1)
+                self.mock_controller_not_found(widget=-1)
             except NotFound:
                 assert True
             else:
                 assert False
-
 
     @ParamConverter(constructor=Widget.mock_select, param='widget',
                     check_unique=True, on_more_than_one=500,
@@ -140,7 +139,7 @@ class CallDecoratorTestCase(ParamConverterTestCase):
     def test_check_unique_default(self):
         with self.get_app_context():
             try:
-                widget = self.mock_controller_check_unique(widget='red')
+                self.mock_controller_check_unique(widget='red')
             except InternalServerError:
                 assert True
             else:
@@ -155,7 +154,7 @@ class CallDecoratorTestCase(ParamConverterTestCase):
     def test_check_unique_custom_callable(self):
         with self.get_app_context():
             try:
-                widget = self.mock_controller_check_unique_custom_callable(
+                self.mock_controller_check_unique_custom_callable(
                     widget='red'
                 )
             except ImATeapot:
@@ -172,14 +171,13 @@ class CallDecoratorTestCase(ParamConverterTestCase):
     def test_check_unique_custom_integer(self):
         with self.get_app_context():
             try:
-                widget = self.mock_controller_check_unique_custom_integer(
+                self.mock_controller_check_unique_custom_integer(
                     widget='red'
                 )
             except Conflict:
                 assert True
             else:
                 assert False
-
 
     @ParamConverter(constructor=Widget.mock_select, param='widget',
                     inject_old_kwarg_as='_widget')
@@ -238,7 +236,6 @@ class CallableGeneratorsTestCase(ParamConverterTestCase):
             assert True
         else:
             assert False
-
 
     def test_with_callable(self):
         def c():

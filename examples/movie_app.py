@@ -1,6 +1,5 @@
-"""
-Flask-OGM Example: Movie App
-----------------------------
+"""Flask-OGM Example: Movie App
+-------------------------------
 Tiny app designed to demonstrate using the extension on the movies
 dataset. To get the data for this app, run `:play movies` in the
 neo4j browser then copy and paste then execute the query which appears.
@@ -32,6 +31,7 @@ class ExampleGraphObject(GraphObject):
             cls.__primarylabel__
         )
         return graph.run(q).evaluate()
+
 
 class Movie(ExampleGraphObject):
     """Taken from the py2neo docs."""
@@ -74,16 +74,17 @@ class Person(ExampleGraphObject):
 # setup the test app
 app = Flask('Flask-OGM Movie App')
 app.config.update(
-    OGM_GRAPH_HOST = 'localhost',
-    OGM_GRAPH_USER = 'neo4j',
-    OGM_GRAPH_PASSWORD = 'password'
+    OGM_GRAPH_HOST='localhost',
+    OGM_GRAPH_USER='neo4j',
+    OGM_GRAPH_PASSWORD='password'
 )
 
 # initialize our graph
 ogm = OGM(app)
 
-@app.route('/count/movies', defaults = { 'go': Movie })
-@app.route('/count/people', defaults = { 'go': Person })
+
+@app.route('/count/movies', defaults={'go': Movie})
+@app.route('/count/people', defaults={'go': Person})
 def count_objects(go):
     """Count the total number of nodes of this type"""
     return jsonify({
@@ -91,8 +92,9 @@ def count_objects(go):
         'total': go.count_nodes(ogm.graph)
     })
 
+
 @app.route('/movie/<movie>')
-@ParamConverter(graph_object = Movie, param = 'movie', select_on = 'title')
+@ParamConverter(graph_object=Movie, param='movie', select_on='title')
 def get_movie(movie):
     return jsonify({
         'movie': movie.as_dict(),
@@ -101,8 +103,9 @@ def get_movie(movie):
         'directors': [p.as_dict() for p in movie.directors],
     })
 
+
 @app.route('/person/<person>')
-@ParamConverter(graph_object = Person, param = 'person', select_on = 'name')
+@ParamConverter(graph_object=Person, param='person', select_on='name')
 def get_person(person):
     return jsonify({
         'person': person.as_dict(),
@@ -111,13 +114,16 @@ def get_person(person):
         'acted_in': [m.as_dict() for m in person.acted_in],
     })
 
+
 @app.route('/movies/by/year/<int:movies>')
-@ParamConverter(graph_object=Movie, param='movies', select_on='released', single=False)
+@ParamConverter(graph_object=Movie, param='movies', select_on='released',
+                single=False)
 def get_films_in_year(movies):
     return jsonify([
         m.as_dict()
         for m in movies
     ])
+
 
 if __name__ == '__main__':
     app.run(debug=True)
