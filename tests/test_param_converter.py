@@ -1,4 +1,8 @@
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import Conflict, \
+                                ImATeapot, \
+                                InternalServerError, \
+                                NotFound
+from flask import abort
 
 from flask_ogm.param_converter import ParamConverter, \
                                       ParamConverterIllegalArgumentException, \
@@ -43,6 +47,10 @@ class ParamConverterTestCase(FlaskOGMTestCase):
         else:
             # no exception produced, test fails
             assert False
+
+
+def im_a_teapot():
+    abort(418)
 
 
 class CallDecoratorTestCase(ParamConverterTestCase):
@@ -115,8 +123,13 @@ class CallDecoratorTestCase(ParamConverterTestCase):
 
     def test_not_found(self):
         with self.get_app_context():
-            widget = self.mock_controller_not_found(widget=-1)
-            assert widget == 404
+            try:
+                widget = self.mock_controller_not_found(widget=-1)
+            except NotFound:
+                assert True
+            else:
+                assert False
+
 
     @ParamConverter(constructor=Widget.mock_select, param='widget',
                     check_unique=True, on_more_than_one=500,
@@ -124,10 +137,49 @@ class CallDecoratorTestCase(ParamConverterTestCase):
     def mock_controller_check_unique(self, widget=None):
         return widget
 
-    def test_check_unique(self):
+    def test_check_unique_default(self):
         with self.get_app_context():
-            widget = self.mock_controller_check_unique(widget='red')
-            assert widget == 500
+            try:
+                widget = self.mock_controller_check_unique(widget='red')
+            except InternalServerError:
+                assert True
+            else:
+                assert False
+
+    @ParamConverter(constructor=Widget.mock_select, param='widget',
+                    check_unique=True, on_more_than_one=im_a_teapot,
+                    select_on='colour')
+    def mock_controller_check_unique_custom_callable(self, widget=None):
+        return widget
+
+    def test_check_unique_custom_callable(self):
+        with self.get_app_context():
+            try:
+                widget = self.mock_controller_check_unique_custom_callable(
+                    widget='red'
+                )
+            except ImATeapot:
+                assert True
+            else:
+                assert False
+
+    @ParamConverter(constructor=Widget.mock_select, param='widget',
+                    check_unique=True, on_more_than_one=409,
+                    select_on='colour')
+    def mock_controller_check_unique_custom_integer(self, widget=None):
+        return widget
+
+    def test_check_unique_custom_integer(self):
+        with self.get_app_context():
+            try:
+                widget = self.mock_controller_check_unique_custom_integer(
+                    widget='red'
+                )
+            except Conflict:
+                assert True
+            else:
+                assert False
+
 
     @ParamConverter(constructor=Widget.mock_select, param='widget',
                     inject_old_kwarg_as='_widget')
@@ -163,14 +215,30 @@ class CallableGeneratorsTestCase(ParamConverterTestCase):
     def test_on_more_than_one_assigned_properly(self):
         pc = ParamConverter(graph_object=Widget, single=True,
                             check_unique=True, param='id')
-        assert pc.on_more_than_one() == 500
+        try:
+            pc.on_more_than_one()
+        except InternalServerError:
+            assert True
+        else:
+            assert False
 
     def test_on_not_found_assigned_properly(self):
         pc = ParamConverter(graph_object=Widget, param='id')
-        assert pc.on_not_found() == 404
+        try:
+            pc.on_not_found()
+        except NotFound:
+            assert True
+        else:
+            assert False
 
     def test_with_int(self):
-        assert ParamConverter.resolve_to_return_callable(500)() == 500
+        try:
+            ParamConverter.resolve_to_return_callable(500)()
+        except InternalServerError:
+            assert True
+        else:
+            assert False
+
 
     def test_with_callable(self):
         def c():

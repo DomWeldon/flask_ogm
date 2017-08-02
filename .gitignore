@@ -8,3 +8,4 @@ htmlcov/
 .coveralls.yml
 .cache
 Flask_OGM.egg-info
+.eggs/
