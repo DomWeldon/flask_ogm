@@ -1,2 +1,1 @@
-from .graph import *
-from .param_converter import *
+from .graph import OGM

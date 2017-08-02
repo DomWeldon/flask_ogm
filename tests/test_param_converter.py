@@ -1,13 +1,15 @@
 from werkzeug.exceptions import NotFound
 
-from flask_ogm.param_converter import ILLEGAL_ARGUMENT_MESSAGES, \
-                                      ParamConverter, \
+from flask_ogm.param_converter import ParamConverter, \
                                       ParamConverterIllegalArgumentException, \
                                       resolve_fqn_to_object
 
 
 from .util import FlaskOGMTestCase
 from .fixtures import Widget
+
+pce = ParamConverterIllegalArgumentException
+ILLEGAL_ARGUMENT_MESSAGES = pce.ILLEGAL_ARGUMENT_MESSAGES
 
 
 class ParamConverterTestCase(FlaskOGMTestCase):

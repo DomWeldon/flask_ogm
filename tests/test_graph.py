@@ -1,10 +1,10 @@
 from py2neo import Graph
 
-from flask_ogm import DefaultGraphCredentialsUnclearError, \
-                      GraphCredentialsIncompleteError, \
-                      GraphCredentialsNotFoundError, \
-                      OGM, \
-                      OutOfApplicationContextError
+from flask_ogm import OGM
+from flask_ogm.errors import DefaultGraphCredentialsUnclearError, \
+                             GraphCredentialsIncompleteError, \
+                             GraphCredentialsNotFoundError, \
+                             OutOfApplicationContextError
 
 from .util import FlaskOGMTestCase
 

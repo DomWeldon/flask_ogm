@@ -3,86 +3,10 @@ import inspect
 
 from .graph import OGM
 
+from flask_ogm.errors import ParamConverterIllegalArgumentException
+
 
 ogm = OGM()
-
-ILLEGAL_ARGUMENT_MESSAGES = {
-    'CONSTRUCTOR_SHOULD_NOT_BE_CALLABLE': (
-        'Constructor cannot be callable when graph_object '
-        'is specified: constructor is '
-    ),
-    'CONSTRUCTOR_FQN_NOT_FOUND': (
-        'Your constructor, specified as a fully qualified string to import, '
-        'was not found: '
-    ),
-    'CONSTRUCTOR_ATTR_NOT_FOUND': (
-        'Your constructor, specified as a string point to an attribute '
-        'of your graph_object, was not found: '
-    ),
-    'CONSTRUCTOR_ATTR_NOT_CALLABLE': (
-        'Your constructor, specified as a string point to an attribute '
-        'of your graph_object, was found but is not callable: '
-    ),
-    'CONSTRUCTOR_FQN_NOT_CALLABLE': (
-        'Constructor method not callable:'
-    ),
-    'NO_CALLABLE_CONSTRUCTOR_FOUND': (
-        'graph_object and constructor cannot both be None. '
-        'You must indicate a constructor to be used as a constructor.'
-    ),
-    'INVALID_CONSTRUCTOR_ARGUMENT': (
-        'Constructor invalid: '
-    ),
-    'DEFAULT_CONSTRUCTOR_NOT_FOUND': (
-        'The default constructor, `select`, is not implemented '
-        'for this graph_object: '
-    ),
-    'IMPORT_REFERENCES_MUST_BE_FQN': (
-        'References to an object to import must be fully qualified names, '
-        'no possible module found for: '
-    ),
-    'GRAPH_OBJECT_FQN_NOT_FOUND': (
-        'Your graph object, specified as a fully qualified string to import,'
-        ' was not found: '
-    ),
-    'MULTIPLE_AND_ON_>1_SET': (
-        'You have set single = False, so requesting more than one result '
-        'to be returned, however, you have also specified a status code or '
-        'exception to be raised or returned when  >1 result is found.'
-    ),
-    'MULTIPLE_AND_CHECK_UNIQUE': (
-        'You have set single = False, so requesting more than one result '
-        'to be returned, however, you have also set check_unique = True, '
-        'meaning an error should be raised when >1 result is found.'
-    ),
-    'PARAM_NOT_SPECIFIED': (
-        'You must speficy the kwarg you wish to search on and replace.'
-    ),
-    'PARAM_MUST_BE_STRING': (
-        'The speficied parameter must be a string.'
-    ),
-    'CANNOT_REINJECT_OLD_PARAM': (
-        'You have set the value of inject_old_kwarg_as == param'
-    ),
-    'PARAM_NOT_FOUND_IN_KWARGS': (
-        'The specified param was not found in the kwargs of the '
-        'decorated function.'
-    ),
-    'CONSTRUCTOR_MUST_RETURN_ITERABLE': (
-        'Your constructor returned did not return an iterable. Your '
-        'constructor must return an iterable even when no results are '
-        'found. Your constructor returned: '
-
-    ),
-    'REINJECT_OLD_PARAM_MUST_BE_KWARG': (
-        'The value to reinject the original value of the param must '
-        'be specified as a keyword argument in the decorated function.'
-    ),
-}
-
-
-class ParamConverterIllegalArgumentException(ValueError):
-    pass
 
 
 def resolve_fqn_to_object(fqn):
@@ -147,27 +71,27 @@ class ParamConverter(object):
         # some illogical argument combinations need to be weeded out early
         if not single and on_more_than_one is not None:
             raise ParamConverterIllegalArgumentException(
-                ILLEGAL_ARGUMENT_MESSAGES['MULTIPLE_AND_ON_>1_SET']
+                'MULTIPLE_AND_ON_>1_SET'
             )
 
         if not single and check_unique:
             raise ParamConverterIllegalArgumentException(
-                ILLEGAL_ARGUMENT_MESSAGES['MULTIPLE_AND_CHECK_UNIQUE']
+                'MULTIPLE_AND_CHECK_UNIQUE'
             )
 
         if param is None:
             raise ParamConverterIllegalArgumentException(
-                ILLEGAL_ARGUMENT_MESSAGES['PARAM_NOT_SPECIFIED']
+                'PARAM_NOT_SPECIFIED'
             )
 
         if not isinstance(param, str):
             raise ParamConverterIllegalArgumentException(
-                ILLEGAL_ARGUMENT_MESSAGES['PARAM_MUST_BE_STRING']
+                'PARAM_MUST_BE_STRING'
             )
 
         if inject_old_kwarg_as == param:
             raise ParamConverterIllegalArgumentException(
-                ILLEGAL_ARGUMENT_MESSAGES['CANNOT_REINJECT_OLD_PARAM']
+                'CANNOT_REINJECT_OLD_PARAM'
             )
 
         # work out the constructor
@@ -207,7 +131,7 @@ class ParamConverter(object):
             # is the param in the kwargs?
             if self.param not in kwargs:
                 raise ParamConverterIllegalArgumentException(
-                    ILLEGAL_ARGUMENT_MESSAGES['PARAM_NOT_FOUND_IN_KWARGS']
+                    'PARAM_NOT_FOUND_IN_KWARGS'
                 )
             search_value = kwargs[self.param]
 
@@ -227,11 +151,8 @@ class ParamConverter(object):
                 d = list(q)
             except TypeError:
                 raise ParamConverterIllegalArgumentException(
-                    ILLEGAL_ARGUMENT_MESSAGES[
-                        'CONSTRUCTOR_MUST_RETURN_ITERABLE'
-                    ]
-                    + repr(q)
-                )
+                    'CONSTRUCTOR_MUST_RETURN_ITERABLE'
+                ).append_to_message(repr(q))
 
             # did we find anything?
             if len(d) == 0:
@@ -252,9 +173,7 @@ class ParamConverter(object):
             if self.inject_old_kwarg_as is not None \
                and self.inject_old_kwarg_as not in kwargs:
                 raise ParamConverterIllegalArgumentException(
-                    ILLEGAL_ARGUMENT_MESSAGES[
-                        'REINJECT_OLD_PARAM_MUST_BE_KWARG'
-                    ]
+                    'REINJECT_OLD_PARAM_MUST_BE_KWARG'
                 )
             elif self.inject_old_kwarg_as is not None:
                 kwargs[self.inject_old_kwarg_as] = search_value
@@ -286,14 +205,12 @@ class ParamConverter(object):
                 resolved_object = resolve_fqn_to_object(graph_object)
             except ImportError:
                 raise ParamConverterIllegalArgumentException(
-                    ILLEGAL_ARGUMENT_MESSAGES['GRAPH_OBJECT_FQN_NOT_FOUND']
-                    + graph_object
-                )
+                    'GRAPH_OBJECT_FQN_NOT_FOUND'
+                ).append_to_message(graph_object)
             except ValueError:
                 raise ParamConverterIllegalArgumentException(
-                    ILLEGAL_ARGUMENT_MESSAGES['IMPORT_REFERENCES_MUST_BE_FQN']
-                    + graph_object
-                )
+                    'IMPORT_REFERENCES_MUST_BE_FQN'
+                ).append_to_message(graph_object)
             graph_object = resolved_object
 
         # is it a callable?
@@ -302,11 +219,8 @@ class ParamConverter(object):
             return constructor
         elif graph_object is not None and callable(constructor):
             raise ParamConverterIllegalArgumentException(
-                ILLEGAL_ARGUMENT_MESSAGES[
-                    'CONSTRUCTOR_SHOULD_NOT_BE_CALLABLE'
-                ]
-                + repr(constructor)
-            )
+                'CONSTRUCTOR_SHOULD_NOT_BE_CALLABLE'
+            ).append_to_message(repr(constructor))
 
         # no, is it string reference to a callable?
         if isinstance(constructor, str) and '.' in constructor:
@@ -315,19 +229,16 @@ class ParamConverter(object):
             except ImportError:
                 # reference not found
                 raise ParamConverterIllegalArgumentException(
-                    ILLEGAL_ARGUMENT_MESSAGES['CONSTRUCTOR_FQN_NOT_FOUND']
-                    + str(constructor)
-                )
+                    'CONSTRUCTOR_FQN_NOT_FOUND'
+                ).append_to_message(str(constructor))
             except ValueError:
                 raise ParamConverterIllegalArgumentException(
-                    ILLEGAL_ARGUMENT_MESSAGES['IMPORT_REFERENCES_MUST_BE_FQN']
-                    + str(constructor)
-                )
+                    'IMPORT_REFERENCES_MUST_BE_FQN'
+                ).append_to_message(str(constructor))
             if not callable(resolved_object):
                 raise ParamConverterIllegalArgumentException(
-                    ILLEGAL_ARGUMENT_MESSAGES['CONSTRUCTOR_FQN_NOT_CALLABLE']
-                    + str(constructor)
-                )
+                    'CONSTRUCTOR_FQN_NOT_CALLABLE'
+                ).append_to_message(str(constructor))
             return resolved_object
 
         # a reference to a method on graph_object?
@@ -340,11 +251,11 @@ class ParamConverter(object):
             except AttributeError:
                 # but it isn't!
                 raise ParamConverterIllegalArgumentException(
-                    ILLEGAL_ARGUMENT_MESSAGES['CONSTRUCTOR_ATTR_NOT_FOUND']
+                    'CONSTRUCTOR_ATTR_NOT_FOUND'
                 )
             if not callable(constructor_attr):
                 raise ParamConverterIllegalArgumentException(
-                    ILLEGAL_ARGUMENT_MESSAGES['CONSTRUCTOR_ATTR_NOT_CALLABLE']
+                    'CONSTRUCTOR_ATTR_NOT_CALLABLE'
                 )
             return constructor_attr
 
@@ -352,15 +263,14 @@ class ParamConverter(object):
         if constructor is not None:
             # yes
             raise ParamConverterIllegalArgumentException(
-                ILLEGAL_ARGUMENT_MESSAGES['INVALID_CONSTRUCTOR_ARGUMENT']
-                + repr(constructor)
-            )
+                'INVALID_CONSTRUCTOR_ARGUMENT'
+            ).append_to_message(repr(constructor))
 
         # constructor is None
         if graph_object is None:
             # so if graph_object: we can't produce a query
             raise ParamConverterIllegalArgumentException(
-                ILLEGAL_ARGUMENT_MESSAGES['NO_CALLABLE_CONSTRUCTOR_FOUND']
+                'NO_CALLABLE_CONSTRUCTOR_FOUND'
             )
 
         # is it the default constructor?
@@ -370,9 +280,8 @@ class ParamConverter(object):
         except AttributeError:
             # no
             raise ParamConverterIllegalArgumentException(
-                ILLEGAL_ARGUMENT_MESSAGES['DEFAULT_CONSTRUCTOR_NOT_FOUND']
-                + repr(graph_object)
-            )
+                'DEFAULT_CONSTRUCTOR_NOT_FOUND'
+            ).append_to_message(repr(graph_object))
 
         # code should never run past here
         assert False  # pragma: no cover

@@ -9,26 +9,10 @@ try:
 except ImportError:  # pragma: no cover
     from flask import _request_ctx_stack as stack
 
-
-class FlaskOGMError(Exception):
-    """Base class for errors in this module."""
-    pass
-
-
-class GraphCredentialsIncompleteError(FlaskOGMError):
-    pass
-
-
-class GraphCredentialsNotFoundError(FlaskOGMError):
-    pass
-
-
-class OutOfApplicationContextError(FlaskOGMError):
-    pass
-
-
-class DefaultGraphCredentialsUnclearError(FlaskOGMError):
-    pass
+from flask_ogm.errors import DefaultGraphCredentialsUnclearError, \
+                             GraphCredentialsIncompleteError, \
+                             GraphCredentialsNotFoundError, \
+                             OutOfApplicationContextError
 
 
 class OGM(object):
