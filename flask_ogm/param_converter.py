@@ -1,3 +1,4 @@
+from flask import abort
 from functools import wraps
 import inspect
 
@@ -191,7 +192,7 @@ class ParamConverter(object):
             return r
 
         def wrapper():
-            return r
+            abort(r)
 
         return wrapper
 
