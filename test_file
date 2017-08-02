@@ -1,0 +1,2 @@
+MATCH (n) RETURN COUNT(n)
+CREATE (n:TestNode {val: 123})
