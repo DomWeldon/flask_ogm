@@ -43,6 +43,11 @@
   <div class="section" id="paramconverter">
 <h1>ParamConverter<a class="headerlink" href="#paramconverter" title="Permalink to this headline">¶</a></h1>
 <p>ParamConverter is a tool used to avoid having to repeat code to pull GraphObjects out of databases in response to user input.</p>
+<p>It can be used as a <a class="reference external" href="http://flask.pocoo.org/docs/0.12/patterns/viewdecorators/">view decorator</a> to convert a parameter in the URL route, to the relevant <cite>py2neo.ogm.Graph</cite> object, or a list of such objects, which correspond to the value passed from the user in the URL. The best way to understand the behaviour of the decorator is to see an example such as that below.</p>
+<p>The examples below are taken from the testing</p>
+<div class="section" id="quick-start-pull-a-move-out-of-the-graph">
+<h2>Quick Start: Pull a Move Out of the Graph<a class="headerlink" href="#quick-start-pull-a-move-out-of-the-graph" title="Permalink to this headline">¶</a></h2>
+</div>
 </div>
 
 
@@ -65,7 +70,10 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph.html">Graph Connections</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">ParamConverter</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ParamConverter</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#quick-start-pull-a-move-out-of-the-graph">Quick Start: Pull a Move Out of the Graph</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Index of Errors</a></li>
 </ul>

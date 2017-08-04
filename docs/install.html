@@ -48,9 +48,12 @@
 </div>
 <div class="section" id="quick-start">
 <h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
-<p>You can now create an application and access your graph using the <code class="docutils literal"><span class="pre">ogm.graph</span></code> interface. You must specify the connection credentials in your application’s configuration, port and protocol are optional, but host, user and password are required.</p>
+<p>You can now create an application and access your graph using the <code class="docutils literal"><span class="pre">ogm.graph</span></code> interface. You must specify the connection credentials in your application’s configuration, port and protocol are optional, but host, user and password are required. You can also use the <cite>ParamConverter</cite> to pull objects out of your database, as seen in the example below.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
 <span class="kn">from</span> <span class="nn">flask_ogm</span> <span class="k">import</span> <span class="n">OGM</span>
+<span class="c1"># optionally import ParamConverter to pull objercts out of the graph</span>
+<span class="kn">from</span> <span class="nn">flask_ogm.param_converter</span> <span class="k">import</span> <span class="n">ParamConverter</span>
+<span class="kn">from</span> <span class="nn">py2neo.ogm</span> <span class="k">import</span> <span class="n">GraphObject</span><span class="p">,</span> <span class="n">Property</span>
 
 <span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;Flask-OGM Quick Start Test App&#39;</span><span class="p">)</span>
 <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
@@ -60,11 +63,31 @@
 <span class="p">)</span>
 <span class="n">ogm</span> <span class="o">=</span> <span class="n">OGM</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
 
+
+<span class="c1"># simple example</span>
 <span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/count&#39;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">node_count</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Example running a cypher query. Return node count.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
       <span class="s1">&#39;MATCH (n) RETURN COUNT (n) AS node_count&#39;</span>
     <span class="p">)</span><span class="o">.</span><span class="n">evaluate</span><span class="p">())</span>
+
+
+<span class="c1"># using ParamConverter</span>
+<span class="c1"># we need a model to pull out of the graph</span>
+<span class="k">class</span> <span class="nc">Movie</span><span class="p">(</span><span class="n">GraphObject</span><span class="p">):</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">Property</span><span class="p">()</span>  <span class="c1"># only one property shown in quick start</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/movie/&lt;movie&gt;&#39;</span><span class="p">)</span>
+<span class="nd">@ParamConverter</span><span class="p">(</span><span class="n">graph_object</span><span class="o">=</span><span class="n">Movie</span><span class="p">,</span> <span class="n">param</span><span class="o">=</span><span class="s1">&#39;movie&#39;</span><span class="p">,</span> <span class="n">search_on</span><span class="o">=</span><span class="s1">&#39;title&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_movie_by_title</span><span class="p">(</span><span class="n">movie</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;Example using ParamConverter.</span>
+<span class="sd">    Search for movie based on Title, if found, return movie title,</span>
+<span class="sd">    if no movie found, ParamConverter will return a 404, and this</span>
+<span class="sd">    code will not be executed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">movie</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>  <span class="c1"># simple as that</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
