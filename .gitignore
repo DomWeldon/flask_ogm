@@ -10,3 +10,5 @@ htmlcov/
 Flask_OGM.egg-info
 .eggs/
 dist
+sdist
+build

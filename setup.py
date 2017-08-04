@@ -32,7 +32,7 @@ setup(
         'py2neo',
     ],
     classifiers=[
-        'Develoment Status :: 3 Alpha',
+        'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
