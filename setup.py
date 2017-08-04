@@ -50,5 +50,6 @@ setup(
     test_suite='py.test',
     tests_require=['pytest'],
     setup_requires=['pytest-runner'],
-    python_requires='>=2.7'
+    python_requires='>=2.7',
+    download_url='https://github.com/domweldon/flask-ogm/archive/1.1.0.tar.gz'
 )
