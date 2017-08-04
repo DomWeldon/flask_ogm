@@ -7,8 +7,10 @@ test/__pycache__
 htmlcov/
 .coveralls.yml
 .cache
-Flask_OGM.egg-info
+Flask_OGM.egg-info/
 .eggs/
 dist
 sdist
 build
+*.egg-info/
+.pypirc
