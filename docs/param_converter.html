@@ -44,9 +44,110 @@
 <h1>ParamConverter<a class="headerlink" href="#paramconverter" title="Permalink to this headline">¶</a></h1>
 <p>ParamConverter is a tool used to avoid having to repeat code to pull GraphObjects out of databases in response to user input.</p>
 <p>It can be used as a <a class="reference external" href="http://flask.pocoo.org/docs/0.12/patterns/viewdecorators/">view decorator</a> to convert a parameter in the URL route, to the relevant <cite>py2neo.ogm.Graph</cite> object, or a list of such objects, which correspond to the value passed from the user in the URL. The best way to understand the behaviour of the decorator is to see an example such as that below.</p>
-<p>The examples below are taken from the testing</p>
-<div class="section" id="quick-start-pull-a-move-out-of-the-graph">
-<h2>Quick Start: Pull a Move Out of the Graph<a class="headerlink" href="#quick-start-pull-a-move-out-of-the-graph" title="Permalink to this headline">¶</a></h2>
+<p>The examples below are taken from the testing suite, and all refer to <cite>Widget</cite> nodes, which have an integer ID (<cite>Widget.unique_id</cite>), a name (<cite>Widget.name</cite>) and a colour (<cite>Widget.colour</cite>). Whilst widget IDs and names are unique, colours are not.</p>
+<p>The following boiler plate code is omitted from all examples.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># setup the app, import relevant objects</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
+<span class="kn">from</span> <span class="nn">flask_ogm</span> <span class="k">import</span> <span class="n">OGM</span>
+<span class="kn">from</span> <span class="nn">flask_ogm.param_converter</span> <span class="k">import</span> <span class="n">ParamConverter</span>
+<span class="kn">from</span> <span class="nn">tests.fixtures</span> <span class="k">import</span> <span class="n">Widget</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;Flask-OGM Quick Start Test App&#39;</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+  <span class="n">OGM_GRAPH_HOST</span> <span class="o">=</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
+  <span class="n">OGM_GRAPH_USER</span> <span class="o">=</span> <span class="s1">&#39;neo4j&#39;</span><span class="p">,</span>
+  <span class="n">OGM_GRAPH_PASSWORD</span> <span class="o">=</span> <span class="s1">&#39;password&#39;</span>
+<span class="p">)</span>
+<span class="n">ogm</span> <span class="o">=</span> <span class="n">OGM</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="arguments">
+<h2>Arguments<a class="headerlink" href="#arguments" title="Permalink to this headline">¶</a></h2>
+<p>Param Converter takes the following arguments.</p>
+<dl class="method">
+<dt id="flask_ogm.param_converter.ParamConverter.__init__">
+<code class="descclassname">ParamConverter.</code><code class="descname">__init__</code><span class="sig-paren">(</span><em>graph_object=None</em>, <em>constructor=None</em>, <em>param=None</em>, <em>select_on=None</em>, <em>on_not_found=404</em>, <em>bind=None</em>, <em>check_unique=False</em>, <em>on_more_than_one=None</em>, <em>single=True</em>, <em>inject_old_kwarg_as=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_ogm/param_converter.html#ParamConverter.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_ogm.param_converter.ParamConverter.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator for Flask controllers. Will convert a parameter to
+either a GraphObject or a collection of GraphObject based on
+a query to the graph. If no object is found, it will act as
+instructed, by default, returning a 404.</p>
+<p>Use graph_object and / or constructor to specify a constructor
+function which takes the</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>graph_object</strong> – class to return instances of, usually
+a py2neo.ogm.GraphObject but can be custom
+so long as it implements default method
+if no constructor specified</li>
+<li><strong>constructor</strong> – reference to the method used query the
+graph, str or callable, if str then can be
+either fully qualified reference to a
+function the attr of the graph_object.</li>
+<li><strong>param</strong> – kwarg index to use to query the graph - will be
+replaced by the return of the query</li>
+<li><strong>select_on</strong> – if specified, the param will not be passed to
+the constructor when called, but added onto
+the constructor using where(select_on = x)</li>
+<li><strong>on_not_found</strong> – what to return when no objects are found,
+can be callable, int (HTTP status) or
+str, if None, will return 404</li>
+<li><strong>on_more_than_one</strong> – if unique is True, what to return
+if &gt;1 argument is found, if None, 500</li>
+<li><strong>bind</strong> – the bind to search using with ogm.get_connection,
+default if None</li>
+<li><strong>check_unique</strong> – if True when single is True, will check
+that only 1 object is returned</li>
+<li><strong>inject_old_kwarg_as</strong> – if a string, the original value of
+param will be injected into the
+decorated function. The string must
+relate to a kwarg in the decorated
+function.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the function it is decorating</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p>Test</p>
+</div>
+<div class="section" id="quick-start-pull-node-from-graph-using-primary-key">
+<h2>Quick Start: Pull Node from Graph using Primary Key<a class="headerlink" href="#quick-start-pull-node-from-graph-using-primary-key" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># simple example</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/count&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">node_count</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Example running a cypher query. Return node count.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+      <span class="s1">&#39;MATCH (n) RETURN COUNT (n) AS node_count&#39;</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">evaluate</span><span class="p">())</span>
+
+
+<span class="c1"># using ParamConverter</span>
+<span class="c1"># we need a model to pull out of the graph</span>
+<span class="k">class</span> <span class="nc">Movie</span><span class="p">(</span><span class="n">GraphObject</span><span class="p">):</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">Property</span><span class="p">()</span>  <span class="c1"># only one property shown in quick start</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/movie/&lt;movie&gt;&#39;</span><span class="p">)</span>
+<span class="nd">@ParamConverter</span><span class="p">(</span><span class="n">graph_object</span><span class="o">=</span><span class="n">Movie</span><span class="p">,</span> <span class="n">param</span><span class="o">=</span><span class="s1">&#39;movie&#39;</span><span class="p">,</span> <span class="n">search_on</span><span class="o">=</span><span class="s1">&#39;title&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_movie_by_title</span><span class="p">(</span><span class="n">movie</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;Example using ParamConverter.</span>
+<span class="sd">    Search for movie based on Title, if found, return movie title,</span>
+<span class="sd">    if no movie found, ParamConverter will return a 404, and this</span>
+<span class="sd">    code will not be executed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">movie</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>  <span class="c1"># simple as that</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 </div>
 
@@ -71,7 +172,8 @@
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph.html">Graph Connections</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">ParamConverter</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#quick-start-pull-a-move-out-of-the-graph">Quick Start: Pull a Move Out of the Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#arguments">Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-start-pull-node-from-graph-using-primary-key">Quick Start: Pull Node from Graph using Primary Key</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">Configuration</a></li>

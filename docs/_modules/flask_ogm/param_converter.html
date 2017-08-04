@@ -1,0 +1,392 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>flask_ogm.param_converter &#8212; Flask-OGM 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for flask_ogm.param_converter</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">abort</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+
+<span class="kn">from</span> <span class="nn">.graph</span> <span class="k">import</span> <span class="n">OGM</span>
+
+<span class="kn">from</span> <span class="nn">flask_ogm.errors</span> <span class="k">import</span> <span class="n">ParamConverterIllegalArgumentException</span>
+
+
+<span class="n">ogm</span> <span class="o">=</span> <span class="n">OGM</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">resolve_fqn_to_object</span><span class="p">(</span><span class="n">fqn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Resolve a string to a callable</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">module_name</span><span class="p">,</span> <span class="n">dot</span><span class="p">,</span> <span class="n">class_name</span> <span class="o">=</span> <span class="n">fqn</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="n">module_name</span><span class="p">,</span> <span class="n">fromlist</span><span class="o">=</span><span class="p">[</span><span class="n">class_name</span><span class="p">])</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">class_name</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ParamConverter"><a class="viewcode-back" href="../../param_converter.html#flask_ogm.param_converter.ParamConverter">[docs]</a><span class="k">class</span> <span class="nc">ParamConverter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert function arguments which contain lookup values</span>
+<span class="sd">    into py2neo.ogm.GraphObjects or collections thereof.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">DEFAULT_CONSTRUCTOR_METHOD</span> <span class="o">=</span> <span class="s1">&#39;select&#39;</span>
+
+<div class="viewcode-block" id="ParamConverter.__init__"><a class="viewcode-back" href="../../param_converter.html#flask_ogm.param_converter.ParamConverter.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_object</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">constructor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">param</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">select_on</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on_not_found</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">bind</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">check_unique</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">on_more_than_one</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">single</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">inject_old_kwarg_as</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Decorator for Flask controllers. Will convert a parameter to</span>
+<span class="sd">        either a GraphObject or a collection of GraphObject based on</span>
+<span class="sd">        a query to the graph. If no object is found, it will act as</span>
+<span class="sd">        instructed, by default, returning a 404.</span>
+
+<span class="sd">        Use graph_object and / or constructor to specify a constructor</span>
+<span class="sd">        function which takes the</span>
+
+<span class="sd">        :param graph_object: class to return instances of, usually</span>
+<span class="sd">                             a py2neo.ogm.GraphObject but can be custom</span>
+<span class="sd">                             so long as it implements default method</span>
+<span class="sd">                             if no constructor specified</span>
+<span class="sd">        :param constructor: reference to the method used query the</span>
+<span class="sd">                            graph, str or callable, if str then can be</span>
+<span class="sd">                            either fully qualified reference to a</span>
+<span class="sd">                            function the attr of the graph_object.</span>
+<span class="sd">        :param param: kwarg index to use to query the graph - will be</span>
+<span class="sd">                      replaced by the return of the query</span>
+<span class="sd">        :param select_on: if specified, the param will not be passed to</span>
+<span class="sd">                          the constructor when called, but added onto</span>
+<span class="sd">                          the constructor using where(select_on = x)</span>
+<span class="sd">        :param on_not_found: what to return when no objects are found,</span>
+<span class="sd">                             can be callable, int (HTTP status) or</span>
+<span class="sd">                             str, if None, will return 404</span>
+<span class="sd">        :param on_more_than_one: if unique is True, what to return</span>
+<span class="sd">                                 if &gt;1 argument is found, if None, 500</span>
+<span class="sd">        :param bind: the bind to search using with ogm.get_connection,</span>
+<span class="sd">                     default if None</span>
+<span class="sd">        :param check_unique: if True when single is True, will check</span>
+<span class="sd">                             that only 1 object is returned</span>
+<span class="sd">        :param inject_old_kwarg_as: if a string, the original value of</span>
+<span class="sd">                                    param will be injected into the</span>
+<span class="sd">                                    decorated function. The string must</span>
+<span class="sd">                                    relate to a kwarg in the decorated</span>
+<span class="sd">                                    function.</span>
+<span class="sd">        :return: the function it is decorating</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># save the bind</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bind</span> <span class="o">=</span> <span class="n">bind</span>
+
+        <span class="c1"># some illogical argument combinations need to be weeded out early</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">single</span> <span class="ow">and</span> <span class="n">on_more_than_one</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                <span class="s1">&#39;MULTIPLE_AND_ON_&gt;1_SET&#39;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">single</span> <span class="ow">and</span> <span class="n">check_unique</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                <span class="s1">&#39;MULTIPLE_AND_CHECK_UNIQUE&#39;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">param</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                <span class="s1">&#39;PARAM_NOT_SPECIFIED&#39;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                <span class="s1">&#39;PARAM_MUST_BE_STRING&#39;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">inject_old_kwarg_as</span> <span class="o">==</span> <span class="n">param</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                <span class="s1">&#39;CANNOT_REINJECT_OLD_PARAM&#39;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># work out the constructor</span>
+        <span class="c1"># we only need the constructor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constructor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_constructor</span><span class="p">(</span>
+            <span class="n">constructor</span><span class="o">=</span><span class="n">constructor</span><span class="p">,</span>
+            <span class="n">graph_object</span><span class="o">=</span><span class="n">graph_object</span><span class="p">)</span>
+
+        <span class="c1"># work out the return type - is it a list or a single value?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">single</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">single</span><span class="p">)</span>
+
+        <span class="c1"># what do we do if it&#39;s not found?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_not_found</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_to_return_callable</span><span class="p">(</span><span class="n">on_not_found</span><span class="p">)</span>
+
+        <span class="c1"># do we worry if we find &gt; 1 node?</span>
+        <span class="k">if</span> <span class="n">single</span> <span class="ow">and</span> <span class="n">check_unique</span><span class="p">:</span>
+            <span class="c1"># yes</span>
+            <span class="k">if</span> <span class="n">on_more_than_one</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">omto</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_to_return_callable</span><span class="p">(</span><span class="n">on_more_than_one</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">omto</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_to_return_callable</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">on_more_than_one</span> <span class="o">=</span> <span class="n">omto</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_unique</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_unique</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># do we inject the old param?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">param</span> <span class="o">=</span> <span class="n">param</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inject_old_kwarg_as</span> <span class="o">=</span> <span class="n">inject_old_kwarg_as</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">select_on</span> <span class="o">=</span> <span class="n">select_on</span></div>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make the db query and inject it into the function&quot;&quot;&quot;</span>
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="c1"># is the param in the kwargs?</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                    <span class="s1">&#39;PARAM_NOT_FOUND_IN_KWARGS&#39;</span>
+                <span class="p">)</span>
+            <span class="n">search_value</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">param</span><span class="p">]</span>
+
+            <span class="c1"># get the graph</span>
+            <span class="n">graph</span> <span class="o">=</span> <span class="n">ogm</span><span class="o">.</span><span class="n">get_connection</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bind</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">select_on</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constructor</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">search_value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># use where on the default constructor</span>
+                <span class="c1"># spoof kwargs using dictionary unpacking</span>
+                <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constructor</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="o">**</span><span class="p">{</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">select_on</span><span class="p">:</span> <span class="n">search_value</span>
+                <span class="p">})</span>
+
+            <span class="c1"># this should return an iterable</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                    <span class="s1">&#39;CONSTRUCTOR_MUST_RETURN_ITERABLE&#39;</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">append_to_message</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+
+            <span class="c1"># did we find anything?</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># no</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_not_found</span><span class="p">()</span>
+
+            <span class="c1"># do we worry about having &gt; 1 result`</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">single</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_unique</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_more_than_one</span><span class="p">()</span>
+
+            <span class="c1"># inject the results</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">single</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span>
+
+            <span class="c1"># reinject old results?</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inject_old_kwarg_as</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> \
+               <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">inject_old_kwarg_as</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                    <span class="s1">&#39;REINJECT_OLD_PARAM_MUST_BE_KWARG&#39;</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">inject_old_kwarg_as</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">inject_old_kwarg_as</span><span class="p">]</span> <span class="o">=</span> <span class="n">search_value</span>
+
+            <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">wrapper</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">resolve_to_return_callable</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a callable which is called which can be called to</span>
+<span class="sd">        provide the makings of a flask response.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">r</span>
+
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">():</span>
+            <span class="n">abort</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">wrapper</span>
+
+    <span class="k">def</span> <span class="nf">resolve_constructor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constructor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">graph_object</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Works out the constructor method to be used to run the query</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># is the graph object a string ref?</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph_object</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="c1"># yes`</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">resolved_object</span> <span class="o">=</span> <span class="n">resolve_fqn_to_object</span><span class="p">(</span><span class="n">graph_object</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                    <span class="s1">&#39;GRAPH_OBJECT_FQN_NOT_FOUND&#39;</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">append_to_message</span><span class="p">(</span><span class="n">graph_object</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                    <span class="s1">&#39;IMPORT_REFERENCES_MUST_BE_FQN&#39;</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">append_to_message</span><span class="p">(</span><span class="n">graph_object</span><span class="p">)</span>
+            <span class="n">graph_object</span> <span class="o">=</span> <span class="n">resolved_object</span>
+
+        <span class="c1"># is it a callable?</span>
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">constructor</span><span class="p">)</span> <span class="ow">and</span> <span class="n">graph_object</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># yes</span>
+            <span class="k">return</span> <span class="n">constructor</span>
+        <span class="k">elif</span> <span class="n">graph_object</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">callable</span><span class="p">(</span><span class="n">constructor</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                <span class="s1">&#39;CONSTRUCTOR_SHOULD_NOT_BE_CALLABLE&#39;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">append_to_message</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">constructor</span><span class="p">))</span>
+
+        <span class="c1"># no, is it string reference to a callable?</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constructor</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">constructor</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">resolved_object</span> <span class="o">=</span> <span class="n">resolve_fqn_to_object</span><span class="p">(</span><span class="n">constructor</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="c1"># reference not found</span>
+                <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                    <span class="s1">&#39;CONSTRUCTOR_FQN_NOT_FOUND&#39;</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">append_to_message</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">constructor</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                    <span class="s1">&#39;IMPORT_REFERENCES_MUST_BE_FQN&#39;</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">append_to_message</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">constructor</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">resolved_object</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                    <span class="s1">&#39;CONSTRUCTOR_FQN_NOT_CALLABLE&#39;</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">append_to_message</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">constructor</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">resolved_object</span>
+
+        <span class="c1"># a reference to a method on graph_object?</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constructor</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> \
+           <span class="ow">and</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">(</span><span class="n">graph_object</span><span class="p">):</span>
+            <span class="c1"># should be</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">constructor_attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">graph_object</span><span class="p">,</span> <span class="n">constructor</span><span class="p">)</span>
+                <span class="c1"># it is!</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="c1"># but it isn&#39;t!</span>
+                <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                    <span class="s1">&#39;CONSTRUCTOR_ATTR_NOT_FOUND&#39;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">constructor_attr</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                    <span class="s1">&#39;CONSTRUCTOR_ATTR_NOT_CALLABLE&#39;</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">constructor_attr</span>
+
+        <span class="c1"># something very wrong?</span>
+        <span class="k">if</span> <span class="n">constructor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># yes</span>
+            <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                <span class="s1">&#39;INVALID_CONSTRUCTOR_ARGUMENT&#39;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">append_to_message</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">constructor</span><span class="p">))</span>
+
+        <span class="c1"># constructor is None</span>
+        <span class="k">if</span> <span class="n">graph_object</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># so if graph_object: we can&#39;t produce a query</span>
+            <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                <span class="s1">&#39;NO_CALLABLE_CONSTRUCTOR_FOUND&#39;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># is it the default constructor?</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">graph_object</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_CONSTRUCTOR_METHOD</span><span class="p">)</span>
+            <span class="c1"># yes</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="c1"># no</span>
+            <span class="k">raise</span> <span class="n">ParamConverterIllegalArgumentException</span><span class="p">(</span>
+                <span class="s1">&#39;DEFAULT_CONSTRUCTOR_NOT_FOUND&#39;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">append_to_message</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">graph_object</span><span class="p">))</span>
+
+        <span class="c1"># code should never run past here</span>
+        <span class="k">assert</span> <span class="kc">False</span>  <span class="c1"># pragma: no cover</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Flask-OGM</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../graph.html">Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../param_converter.html">ParamConverter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Index of Errors</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Dom Weldon.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

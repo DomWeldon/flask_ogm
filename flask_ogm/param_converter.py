@@ -32,33 +32,59 @@ class ParamConverter(object):
         """Decorator for Flask controllers. Will convert a parameter to
         either a GraphObject or a collection of GraphObject based on
         a query to the graph. If no object is found, it will act as
-        instructed, by default, returning a 404.
+        instructed, by default returning a 404. Use graph_object
+        and/or constructor arguments to specify a callable which will
+        take the kwarg[param], and use it to search for a node based
+        on its value.
 
-        Use graph_object and / or constructor to specify a constructor
-        function which takes the
-
-        :param graph_object: class to return instances of, usually
-                             a py2neo.ogm.GraphObject but can be custom
-                             so long as it implements default method
-                             if no constructor specified
-        :param constructor: reference to the method used query the
-                            graph, str or callable, if str then can be
-                            either fully qualified reference to a
-                            function the attr of the graph_object.
-        :param param: kwarg index to use to query the graph - will be
-                      replaced by the return of the query
-        :param select_on: if specified, the param will not be passed to
-                          the constructor when called, but added onto
-                          the constructor using where(select_on = x)
-        :param on_not_found: what to return when no objects are found,
+        :param graph_object: Class to return instances of, usually
+                             a `py2neo.ogm.GraphObject` but can be
+                             custom class, or a string referencing
+                             that object (e.g., `src.models.Widget`).
+                             If a string is set for `constructor`,
+                             `ParamConverter` will look for a method on
+                             this object with that name, if
+                             `constructor` is None, then the
+                             `DEFAULT_CONSTRUCTOR_METHOD` (set as
+                             select) will be used instead. If
+                             `graph_object` is `None`, then
+                             `constructor` must be specified.
+        :param constructor: A callable, or reference to a callable to
+                            query the graph and return an iterable of
+                            GraphObjects. If `graph_object` is
+                            specified, and this value is a string,
+                            `ParamConverter` will search for a method
+                            named after this string on graph_object.
+        :param param: The key of the keyword argument to act on.
+                      `ParamConverter` will pass the value of this arg
+                      to the constructor, and replace it with what is
+                      returned by the constructor.
+        :param select_on: If graph_object is if specified, and this
+                          value is a string, the param will not be
+                          passed to the constructor when called, but
+                          handed to the query using the `where()`
+                          method, i.e. for `select_on='name'`:`
+                          `Widget.select(graph).where(name=x)`
+        :param on_not_found: What to return when no objects are found,
                              can be callable, int (HTTP status) or
-                             str, if None, will return 404
-        :param on_more_than_one: if unique is True, what to return
-                                 if >1 argument is found, if None, 500
-        :param bind: the bind to search using with ogm.get_connection,
-                     default if None
+                             str. If None, will return 404.
+        :param on_more_than_one: If `check_unique` is True and `single`
+                                 is False, what to return if >1 match
+                                 is returned by the constructor. If
+                                 `None` then will return status 500.
+        :param single: Bool, whether to return a the first result from
+                       `constructor`, or all results as a list
+                       (`constructor` must return an iterable). Can
+                       be used in conjunction with `check_unique` and
+                       `on_more_than_one` to ensure values are unique
+                       in the graph.
+        :param bind: the bind to search using with
+                     `ogm.get_connection()`, `ogm.graph` is used if
+                     None.
         :param check_unique: if True when single is True, will check
-                             that only 1 object is returned
+                             that only 1 object is returned. If >1
+                             object, then will act according to
+                             `on_more_than_one`
         :param inject_old_kwarg_as: if a string, the original value of
                                     param will be injected into the
                                     decorated function. The string must
