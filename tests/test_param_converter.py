@@ -84,7 +84,7 @@ class CallDecoratorTestCase(ParamConverterTestCase):
         else:
             assert False
 
-    @ParamConverter(constructor=Widget.mock_select, param='widget')
+    @ParamConverter(constructor=Widget.select, param='widget')
     def mock_controller_select_simple(self, widget=None):
         return widget
 
@@ -96,7 +96,7 @@ class CallDecoratorTestCase(ParamConverterTestCase):
             )
             assert widget.unique_id == f['unique_id']
 
-    @ParamConverter(constructor=Widget.mock_select, param='widget',
+    @ParamConverter(constructor=Widget.select, param='widget',
                     select_on='name')
     def mock_controller_select_on_property(self, widget=None):
         return widget
@@ -106,7 +106,7 @@ class CallDecoratorTestCase(ParamConverterTestCase):
             widget = self.mock_controller_select_on_property(widget='Widget 1')
             assert widget.name == 'Widget 1'
 
-    @ParamConverter(constructor=Widget.mock_select, param='widgets',
+    @ParamConverter(constructor=Widget.select, param='widgets',
                     single=False, select_on='colour')
     def mock_controller_select_multiple(self, widgets=None):
         return widgets
@@ -116,7 +116,7 @@ class CallDecoratorTestCase(ParamConverterTestCase):
             widgets = self.mock_controller_select_multiple(widgets='red')
             assert len(widgets) == 2
 
-    @ParamConverter(constructor=Widget.mock_select, param='widget',
+    @ParamConverter(constructor=Widget.select, param='widget',
                     on_not_found=404)
     def mock_controller_not_found(self, widget=None):
         return False
@@ -130,7 +130,7 @@ class CallDecoratorTestCase(ParamConverterTestCase):
             else:
                 assert False
 
-    @ParamConverter(constructor=Widget.mock_select, param='widget',
+    @ParamConverter(constructor=Widget.select, param='widget',
                     check_unique=True, on_more_than_one=500,
                     select_on='colour')
     def mock_controller_check_unique(self, widget=None):
@@ -145,7 +145,7 @@ class CallDecoratorTestCase(ParamConverterTestCase):
             else:
                 assert False
 
-    @ParamConverter(constructor=Widget.mock_select, param='widget',
+    @ParamConverter(constructor=Widget.select, param='widget',
                     check_unique=True, on_more_than_one=im_a_teapot,
                     select_on='colour')
     def mock_controller_check_unique_custom_callable(self, widget=None):
@@ -162,7 +162,7 @@ class CallDecoratorTestCase(ParamConverterTestCase):
             else:
                 assert False
 
-    @ParamConverter(constructor=Widget.mock_select, param='widget',
+    @ParamConverter(constructor=Widget.select, param='widget',
                     check_unique=True, on_more_than_one=409,
                     select_on='colour')
     def mock_controller_check_unique_custom_integer(self, widget=None):
@@ -179,7 +179,7 @@ class CallDecoratorTestCase(ParamConverterTestCase):
             else:
                 assert False
 
-    @ParamConverter(constructor=Widget.mock_select, param='widget',
+    @ParamConverter(constructor=Widget.select, param='widget',
                     inject_old_kwarg_as='_widget')
     def mock_controller_reinject_unspecified_kwarg(self, widget=None):
         return widget
@@ -196,7 +196,7 @@ class CallDecoratorTestCase(ParamConverterTestCase):
         else:
             assert False
 
-    @ParamConverter(constructor=Widget.mock_select, param='widget',
+    @ParamConverter(constructor=Widget.select, param='widget',
                     inject_old_kwarg_as='_widget')
     def mock_controller_reinject_kwarg(self, widget=None, _widget=None):
         return widget, _widget
