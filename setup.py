@@ -25,7 +25,7 @@ setup(
     description='Add support for the py2neo Object Graph Mapper to your app',
     long_description=__doc__,
     package_dir = {'': 'flask_ogm'},
-    py_modules=['graph', 'param_converter', 'errors'],
+    py_modules=['flask_ogm'],
     zip_safe=False,
     include_package_data=True,
     platforms='any',
