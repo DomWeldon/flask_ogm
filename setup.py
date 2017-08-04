@@ -13,7 +13,7 @@ from flask_ogm import __author__, \
 
 setup(
     name='Flask-OGM',
-    version='0.1.0a',
+    version='1.1.0a1',
     url='http://www.flask-ogm.org',
     license='Apache License, Version 2.0',
     author='Dom Weldon',
@@ -32,15 +32,23 @@ setup(
         'py2neo',
     ],
     classifiers=[
+        'Develoment Status :: 3 Alpha',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
         'Topic :: Software Development :: Libraries :: Python Modules',
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Topic :: Database",
     ],
+    keywords='graph database py2neo web development neo4j flask',
     test_suite='py.test',
     tests_require=['pytest'],
-    setup_requires=['pytest-runner']
+    setup_requires=['pytest-runner'],
+    python_requires='>=2.7'
 )
