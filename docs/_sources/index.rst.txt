@@ -15,7 +15,7 @@ Flask-OGM: Documentation
 
 Flask-OGM provides an interface between a flask application and the py2neo_ driver for the neo4j_ graph database. This allows you to use its OGM (Object Graph Model) interface, and to execute cypher queries using py2neo as a driver.
 
-The `ParamConverter` tool also provides a quick and convenient method to pull nodes out of the graph and and making them available as OGM Graph Objects in views; the tool is fully customizable, but by default will return a 404 if no such node is found.
+The ``ParamConverter`` tool also provides a quick and convenient method to pull nodes out of the graph and and making them available as OGM Graph Objects in views; the tool is fully customizable, but by default will return a 404 if no such node is found.
 
 .. _py2neo: http://py2neo.org/v3/
 .. _neo4j: https://neo4j.com/
