@@ -7,10 +7,17 @@ def custom_widget_finding_function():  # pragma: no cover
 
 
 class Widget(GraphObject):
+    """A dummy GraphObject used as a fixture in unit tests, and to show
+    ParamConverter's behaviour in the documentation."""
     unique_id = Property()
+    """Unique integer field."""
     name = Property()
-    colour = Property()  # I'm British: this is the correct spelling :P
+    """Unique string field"""
+    colour = Property()
+    """Non-unique field"""
     __primarykey__ = 'unique_id'
+    """Primary field name to select on"""
+
     MOCK_DATA = [
         {
             'unique_id': 1,
@@ -29,7 +36,12 @@ class Widget(GraphObject):
         },
     ]
 
-    selected_data = []
+    def as_dict(self):
+        """Return the public properties of the node as a dictionary"""
+        return {
+            k: getattr(self, k)
+            for k in ['unique_id', 'name', 'colour']
+        }
 
     @classmethod
     def custom_constructor(cls, graph, property):  # pragma: no cover
@@ -40,7 +52,16 @@ class Widget(GraphObject):
 
     @classmethod
     def return_non_iter(cls, *args, **kwargs):
-        """Required for checking an excdeption is raised when a
+        """Required for checking an exception is raised when a
         constructor returns a non-iterable
         """
         return None
+
+    @classmethod
+    def search_on_name(cls, graph, name):
+        """Use cypher to search for a Widget whose name STARTS WITH
+        name and return results as an iterable.
+        """
+        q = 'MATCH (_:Widget) WHERE _.name STARTS WITH {n} RETURN _'
+        results = graph.run(q, {'n': name}).data()
+        return [cls.wrap(r['_']) for r in results]
