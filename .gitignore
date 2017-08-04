@@ -9,3 +9,4 @@ htmlcov/
 .cache
 Flask_OGM.egg-info
 .eggs/
+dist
