@@ -42,7 +42,7 @@
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p><cite>flas_ogm</cite> can be downloaded from PyPI and installed using <cite>pip</cite>.</p>
+<p><cite>flask_ogm</cite> can be downloaded from PyPI and installed using <cite>pip</cite>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span>$ pip install flask_ogm
 </pre></div>
 </div>
@@ -57,9 +57,9 @@
 
 <span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;Flask-OGM Quick Start Test App&#39;</span><span class="p">)</span>
 <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-  <span class="n">OGM_GRAPH_HOST</span> <span class="o">=</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
-  <span class="n">OGM_GRAPH_USER</span> <span class="o">=</span> <span class="s1">&#39;neo4j&#39;</span><span class="p">,</span>
-  <span class="n">OGM_GRAPH_PASSWORD</span> <span class="o">=</span> <span class="s1">&#39;password&#39;</span>
+  <span class="n">OGM_GRAPH_HOST</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
+  <span class="n">OGM_GRAPH_USER</span><span class="o">=</span><span class="s1">&#39;neo4j&#39;</span><span class="p">,</span>
+  <span class="n">OGM_GRAPH_PASSWORD</span><span class="o">=</span><span class="s1">&#39;password&#39;</span>
 <span class="p">)</span>
 <span class="n">ogm</span> <span class="o">=</span> <span class="n">OGM</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
 
