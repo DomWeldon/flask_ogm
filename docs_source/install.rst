@@ -1,11 +1,11 @@
 Installation
 ============
 
-You can install Flask-OGM by adding it to your project and initializing it like a standard module off github.
+`flas_ogm` can be downloaded from PyPI and installed using `pip`.
 
 ::
 
-  $ pip install -e git+git@github.com:DomWeldon/flask-ogm.git
+  $ pip install flask_ogm
 
 
 Quick Start
