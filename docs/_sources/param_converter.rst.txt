@@ -30,16 +30,16 @@ The following boilerplate code (setting up the example app, connecting to the da
 
 ::
 
-  from flask import Flask
+  from flask import Flask, jsonify
   from flask_ogm import OGM
   from flask_ogm.param_converter import ParamConverter
   from tests.fixtures import Widget
 
-  app = Flask('Flask-OGM Quick Start Test App')
-    app.config.update(
-    OGM_GRAPH_HOST = 'localhost',
-    OGM_GRAPH_USER = 'neo4j',
-    OGM_GRAPH_PASSWORD = 'password'
+  app = Flask('Flask-OGM Documentation App')
+  app.config.update(
+      OGM_GRAPH_HOST='localhost',
+      OGM_GRAPH_USER='neo4j',
+      OGM_GRAPH_PASSWORD='password'
   )
   ogm = OGM(app)
 

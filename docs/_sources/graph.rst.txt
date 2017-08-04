@@ -17,13 +17,28 @@ Every reference to a graph has a name, which is referred to its ``bind``. In the
 
 Since binds are dictionary keys, a bind can be any hashable value.
 
+
+API
+---
+
+.. py:currentmodule:: flask_ogm
+
+
+.. autoclass:: OGM
+  :members:
+
+
 Examples relating to the above are provided below.
+
+
+Example Usage
+-------------
 
 .. _specifying_default_simple:
 
 
 Single (Default) Connection
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The simplest way to connect to a single graph is as below. Optional parameters are included with their default values.
 
@@ -52,7 +67,7 @@ The simplest way to connect to a single graph is as below. Optional parameters a
 .. _multiple_connections_binds:
 
 Multiple Connections (binds)
-----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 On occasion, an application will need to use more than one database. These can be specified using binds like the example below.
 
@@ -94,7 +109,7 @@ On occasion, an application will need to use more than one database. These can b
 
 
 Specifying the Default Connection as a Bind
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++++++++++++++++++++++++++++++++++++++++++++
 
 The default connection can also be set in this way, using the bind ``DEFAULT``, as in the example below.
 
@@ -137,7 +152,7 @@ The default connection can also be set in this way, using the bind ``DEFAULT``, 
 If the default connection is specified in this way whilst any of the top-level default graph settings are provided, a ``DefaultGraphCredentialsUnclearError`` will be raised.
 
 Accessing Graph Connections
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Graphs can be accessed using ``ogm.get_connection()``. If no bind is specified, the default bind is assumed.
 

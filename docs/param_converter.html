@@ -132,16 +132,16 @@ function.</li>
 <div class="section" id="boilerplate-used-in-examples">
 <h3>Boilerplate Used in Examples<a class="headerlink" href="#boilerplate-used-in-examples" title="Permalink to this headline">¶</a></h3>
 <p>The following boilerplate code (setting up the example app, connecting to the database, and importing <cite>ParamConverter</cite> and <cite>Widget</cite> model) should be assumed in all examples.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">jsonify</span>
 <span class="kn">from</span> <span class="nn">flask_ogm</span> <span class="k">import</span> <span class="n">OGM</span>
 <span class="kn">from</span> <span class="nn">flask_ogm.param_converter</span> <span class="k">import</span> <span class="n">ParamConverter</span>
 <span class="kn">from</span> <span class="nn">tests.fixtures</span> <span class="k">import</span> <span class="n">Widget</span>
 
-<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;Flask-OGM Quick Start Test App&#39;</span><span class="p">)</span>
-  <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-  <span class="n">OGM_GRAPH_HOST</span> <span class="o">=</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
-  <span class="n">OGM_GRAPH_USER</span> <span class="o">=</span> <span class="s1">&#39;neo4j&#39;</span><span class="p">,</span>
-  <span class="n">OGM_GRAPH_PASSWORD</span> <span class="o">=</span> <span class="s1">&#39;password&#39;</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;Flask-OGM Documentation App&#39;</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+    <span class="n">OGM_GRAPH_HOST</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
+    <span class="n">OGM_GRAPH_USER</span><span class="o">=</span><span class="s1">&#39;neo4j&#39;</span><span class="p">,</span>
+    <span class="n">OGM_GRAPH_PASSWORD</span><span class="o">=</span><span class="s1">&#39;password&#39;</span>
 <span class="p">)</span>
 <span class="n">ogm</span> <span class="o">=</span> <span class="n">OGM</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
 </pre></div>

@@ -48,9 +48,44 @@
 <p>The default database exists since, in most use cases, it is envisaged that applications will employ only one database. You can therefore set the graph credentials for the default connection as top-level configuration directives in <code class="docutils literal"><span class="pre">app.config</span></code>, whilst connections to other databases must be specified in <code class="docutils literal"><span class="pre">app.config['OGM_GRAPH_CREDENTIALS']</span></code> as a dictionary of dictionaries.</p>
 <p>Every reference to a graph has a name, which is referred to its <code class="docutils literal"><span class="pre">bind</span></code>. In the <code class="docutils literal"><span class="pre">OGM_GRAPH_CREDENTIALS</span></code> dictionary, credentials for each connection should be specified as a dictionary, with its bing as they key (see <a class="reference internal" href="#multiple-connections-binds"><span class="std std-ref">Multiple Connections (binds)</span></a>). The default connection’s graph credentials can also be specified in this way, under the bind <code class="docutils literal"><span class="pre">DEFAULT</span></code>. However, if default graph credentials are specified both as a bind and as individual top-level configuration directives, a  <a class="reference internal" href="errors.html#default-graph-credentials-unclear-error"><span class="std std-ref">DefaultGraphCredentialsUnclearError</span></a> will be raised.</p>
 <p>Since binds are dictionary keys, a bind can be any hashable value.</p>
+<div class="section" id="api">
+<h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="flask_ogm.OGM">
+<em class="property">class </em><code class="descclassname">flask_ogm.</code><code class="descname">OGM</code><span class="sig-paren">(</span><em>app=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_ogm/graph.html#OGM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_ogm.OGM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extension to add OGM and py2neo support.</p>
+<dl class="method">
+<dt id="flask_ogm.OGM.connect">
+<code class="descname">connect</code><span class="sig-paren">(</span><em>bind</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_ogm/graph.html#OGM.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_ogm.OGM.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect to db and create a graph object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_ogm.OGM.get_connection">
+<code class="descname">get_connection</code><span class="sig-paren">(</span><em>bind=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_ogm/graph.html#OGM.get_connection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_ogm.OGM.get_connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a py2neo.Graph object based on config settings</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="flask_ogm.OGM.graph">
+<code class="descname">graph</code><a class="headerlink" href="#flask_ogm.OGM.graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns DEFAULT_GRAPH</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_ogm.OGM.init_app">
+<code class="descname">init_app</code><span class="sig-paren">(</span><em>app</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_ogm/graph.html#OGM.init_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_ogm.OGM.init_app" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provided to support creation using factory method.</p>
+</dd></dl>
+
+</dd></dl>
+
 <p>Examples relating to the above are provided below.</p>
+</div>
+<div class="section" id="example-usage">
+<h2>Example Usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="single-default-connection">
-<span id="specifying-default-simple"></span><h2>Single (Default) Connection<a class="headerlink" href="#single-default-connection" title="Permalink to this headline">¶</a></h2>
+<span id="specifying-default-simple"></span><h3>Single (Default) Connection<a class="headerlink" href="#single-default-connection" title="Permalink to this headline">¶</a></h3>
 <p>The simplest way to connect to a single graph is as below. Optional parameters are included with their default values.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
 <span class="kn">from</span> <span class="nn">flask_ogm</span> <span class="k">import</span> <span class="n">OGM</span>
@@ -74,7 +109,7 @@
 </div>
 </div>
 <div class="section" id="multiple-connections-binds">
-<span id="id2"></span><h2>Multiple Connections (binds)<a class="headerlink" href="#multiple-connections-binds" title="Permalink to this headline">¶</a></h2>
+<span id="id2"></span><h3>Multiple Connections (binds)<a class="headerlink" href="#multiple-connections-binds" title="Permalink to this headline">¶</a></h3>
 <p>On occasion, an application will need to use more than one database. These can be specified using binds like the example below.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">jsonify</span>
 <span class="kn">from</span> <span class="nn">flask_ogm</span> <span class="k">import</span> <span class="n">OGM</span>
@@ -111,7 +146,7 @@
 </pre></div>
 </div>
 <div class="section" id="specifying-the-default-connection-as-a-bind">
-<h3>Specifying the Default Connection as a Bind<a class="headerlink" href="#specifying-the-default-connection-as-a-bind" title="Permalink to this headline">¶</a></h3>
+<h4>Specifying the Default Connection as a Bind<a class="headerlink" href="#specifying-the-default-connection-as-a-bind" title="Permalink to this headline">¶</a></h4>
 <p>The default connection can also be set in this way, using the bind <code class="docutils literal"><span class="pre">DEFAULT</span></code>, as in the example below.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">jsonify</span>
 <span class="kn">from</span> <span class="nn">flask_ogm</span> <span class="k">import</span> <span class="n">OGM</span>
@@ -151,9 +186,10 @@
 </div>
 </div>
 <div class="section" id="accessing-graph-connections">
-<h2>Accessing Graph Connections<a class="headerlink" href="#accessing-graph-connections" title="Permalink to this headline">¶</a></h2>
+<h3>Accessing Graph Connections<a class="headerlink" href="#accessing-graph-connections" title="Permalink to this headline">¶</a></h3>
 <p>Graphs can be accessed using <code class="docutils literal"><span class="pre">ogm.get_connection()</span></code>. If no bind is specified, the default bind is assumed.</p>
 <p>For convenience, the property <code class="docutils literal"><span class="pre">ogm.graph</span></code> is provided to access the default graph, and it is envisaged that most use cases will use this property.</p>
+</div>
 </div>
 </div>
 
@@ -177,12 +213,13 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Graph Connections</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#single-default-connection">Single (Default) Connection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#multiple-connections-binds">Multiple Connections (binds)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#specifying-the-default-connection-as-a-bind">Specifying the Default Connection as a Bind</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api">API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-usage">Example Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#single-default-connection">Single (Default) Connection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multiple-connections-binds">Multiple Connections (binds)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#accessing-graph-connections">Accessing Graph Connections</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#accessing-graph-connections">Accessing Graph Connections</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="param_converter.html">ParamConverter</a></li>

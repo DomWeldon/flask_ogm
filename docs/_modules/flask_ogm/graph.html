@@ -1,0 +1,238 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>flask_ogm.graph &#8212; Flask-OGM 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for flask_ogm.graph</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- encoding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">py2neo</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">current_app</span>
+
+<span class="c1"># import application context - safe vor pre v.09</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">_app_ctx_stack</span> <span class="k">as</span> <span class="n">stack</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">_request_ctx_stack</span> <span class="k">as</span> <span class="n">stack</span>
+
+<span class="kn">from</span> <span class="nn">flask_ogm.errors</span> <span class="k">import</span> <span class="n">DefaultGraphCredentialsUnclearError</span><span class="p">,</span> \
+                             <span class="n">GraphCredentialsIncompleteError</span><span class="p">,</span> \
+                             <span class="n">GraphCredentialsNotFoundError</span><span class="p">,</span> \
+                             <span class="n">OutOfApplicationContextError</span>
+
+
+<div class="viewcode-block" id="OGM"><a class="viewcode-back" href="../../graph.html#flask_ogm.OGM">[docs]</a><span class="k">class</span> <span class="nc">OGM</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extension to add OGM and py2neo support.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">DEFAULT_GRAPH_KEY</span> <span class="o">=</span> <span class="s1">&#39;DEFAULT&#39;</span>
+    <span class="n">GRAPH_CREDENTIALS_CONFIG_KEY</span> <span class="o">=</span> <span class="s1">&#39;OGM_GRAPH_CREDENTIALS&#39;</span>
+    <span class="c1"># required arguments to connect to a db, arguments with a None default</span>
+    <span class="c1"># value are required</span>
+    <span class="n">GRAPH_CREDENTIALS_ARGUMENTS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;PORT&#39;</span><span class="p">:</span> <span class="s1">&#39;7687&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;PROTOCOL&#39;</span><span class="p">:</span> <span class="s1">&#39;bolt&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;PASSWORD&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s1">&#39;USER&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s1">&#39;HOST&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">DEFAULT_GRAPH_SIMPLE_CREDENTIALS_PREFIX</span> <span class="o">=</span> <span class="s1">&#39;OGM_GRAPH&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">app</span>
+        <span class="k">if</span> <span class="n">app</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+
+<div class="viewcode-block" id="OGM.init_app"><a class="viewcode-back" href="../../graph.html#flask_ogm.OGM.init_app">[docs]</a>    <span class="k">def</span> <span class="nf">init_app</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Provided to support creation using factory method.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="OGM.connect"><a class="viewcode-back" href="../../graph.html#flask_ogm.OGM.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bind</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Connect to db and create a graph object&quot;&quot;&quot;</span>
+        <span class="c1"># py2neo allows &gt; 1 graph connection</span>
+        <span class="n">graph_credentials</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">config_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GRAPH_CREDENTIALS_CONFIG_KEY</span>
+        <span class="k">if</span> <span class="n">bind</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_GRAPH_KEY</span><span class="p">:</span>
+            <span class="c1"># The extension supports multiple connections to different graphs</span>
+            <span class="c1"># however, there is a concept of the &quot;default&quot; graph, which for</span>
+            <span class="c1"># most applications will be the only graph used.</span>
+            <span class="c1"># The default graph can be specified either using five strings</span>
+            <span class="c1"># each as seperate keys in in app.config, or as a dictionary,</span>
+            <span class="c1"># in the &#39;DEFAULT&#39; key in app.config[&#39;OGM_GRAPH_CREDENTIALS&#39;],</span>
+            <span class="c1"># but not both.</span>
+
+            <span class="c1"># First, have any of the keys been set?</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_GRAPH_SIMPLE_CREDENTIALS_PREFIX</span>
+            <span class="n">simple_credentials</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">k</span><span class="p">:</span> <span class="n">current_app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="n">prefix</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">k</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">GRAPH_CREDENTIALS_ARGUMENTS</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">prefix</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">current_app</span><span class="o">.</span><span class="n">config</span>
+            <span class="p">}</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">simple_credentials</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># yes</span>
+                <span class="n">graph_credentials</span> <span class="o">=</span> <span class="n">simple_credentials</span>
+                <span class="k">if</span> <span class="n">config_key</span> <span class="ow">in</span> <span class="n">current_app</span><span class="o">.</span><span class="n">config</span> \
+                   <span class="ow">and</span> <span class="s1">&#39;DEFAULT&#39;</span> <span class="ow">in</span> <span class="n">current_app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="n">config_key</span><span class="p">]:</span>
+                    <span class="c1"># credentials have been specified here and elsewhere</span>
+                    <span class="k">raise</span> <span class="n">DefaultGraphCredentialsUnclearError</span><span class="p">((</span>
+                        <span class="s1">&#39;The default graph credentials may be specified only &#39;</span>
+                        <span class="s1">&#39;as single keys in app.config, or as the DEFAULT bind&#39;</span>
+                        <span class="s1">&#39;in ap.config[&quot;OGM_GRAPH_CREDENTIALS&quot;], but not both.&#39;</span>
+                    <span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">graph_credentials</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># get the credentials provided they exist</span>
+                <span class="n">graph_credentials</span> <span class="o">=</span> <span class="n">current_app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="n">config_key</span><span class="p">][</span><span class="n">bind</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GraphCredentialsNotFoundError</span><span class="p">((</span>
+                    <span class="s1">&#39;No graph credentials were found for the graph: </span><span class="si">{0}</span><span class="s1">&#39;</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bind</span><span class="p">))</span>
+
+        <span class="c1"># inject optional params not included</span>
+        <span class="n">optional_credentials</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">GRAPH_CREDENTIALS_ARGUMENTS</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">optional_credentials</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">graph_credentials</span><span class="p">:</span>
+                <span class="n">graph_credentials</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">graph</span> <span class="o">=</span> <span class="n">py2neo</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">://</span><span class="si">{1}</span><span class="s1">:</span><span class="si">{2}</span><span class="s1">@</span><span class="si">{3}</span><span class="s1">:</span><span class="si">{4}</span><span class="s1">/db/data&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="o">*</span><span class="p">[</span><span class="n">graph_credentials</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span>
+                    <span class="s1">&#39;PROTOCOL&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;USER&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;PASSWORD&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;HOST&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;PORT&#39;</span>
+                <span class="p">]]</span>
+            <span class="p">))</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="c1"># not enough arguments in the config</span>
+            <span class="k">raise</span> <span class="n">GraphCredentialsIncompleteError</span><span class="p">((</span>
+                <span class="s1">&#39;At least one of the required configuration parameters&#39;</span>
+                <span class="s1">&#39; was not specificed for the graph: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bind</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">graph</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns DEFAULT_GRAPH&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_connection</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_GRAPH_KEY</span><span class="p">)</span>
+
+<div class="viewcode-block" id="OGM.get_connection"><a class="viewcode-back" href="../../graph.html#flask_ogm.OGM.get_connection">[docs]</a>    <span class="k">def</span> <span class="nf">get_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bind</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a py2neo.Graph object based on config settings&quot;&quot;&quot;</span>
+        <span class="c1"># assume default if no bind specified</span>
+        <span class="k">if</span> <span class="n">bind</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_GRAPH_KEY</span>
+        <span class="c1"># credentials are bound to the application context</span>
+        <span class="n">ctx</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">top</span>
+        <span class="k">if</span> <span class="n">ctx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="s1">&#39;ogm_graphs&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bind</span><span class="p">)):</span>
+                <span class="n">ctx</span><span class="o">.</span><span class="n">ogm_graphs</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="n">bind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ctx</span><span class="o">.</span><span class="n">ogm_graphs</span><span class="p">:</span>
+                <span class="n">ctx</span><span class="o">.</span><span class="n">ogm_graphs</span><span class="p">[</span><span class="n">bind</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="n">bind</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">ctx</span><span class="o">.</span><span class="n">ogm_graphs</span><span class="p">[</span><span class="n">bind</span><span class="p">]</span>
+
+        <span class="k">raise</span> <span class="n">OutOfApplicationContextError</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Flask-OGM</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../graph.html">Graph Connections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../param_converter.html">ParamConverter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Index of Errors</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Dom Weldon.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
