@@ -1,7 +1,7 @@
 Installation
 ============
 
-`flas_ogm` can be downloaded from PyPI and installed using `pip`.
+`flask_ogm` can be downloaded from PyPI and installed using `pip`.
 
 ::
 
