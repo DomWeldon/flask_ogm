@@ -4,13 +4,16 @@ Flask-OGM
 
 Add support for the py2neo library to access neo4j in your flask app.
 """
-from setuptools import setup
+try:
+    from setuptools import setup, find_packages
+except ImportError:
+    from distutils.core import setup, find_packages
 
 __author__ = 'Dom Weldon <dom.weldon@gmail.com>'
 __email__ = 'dom.weldon@gmail.com'
 __license__ = 'Apache License, Version 2.0'
 __package__ = 'flask_ogm'
-__version__ = '1.1.0a6'
+__version__ = '1.1.0a7'
 
 setup(
     name='flask_ogm',
@@ -21,7 +24,8 @@ setup(
     author_email='dom.weldon@gmail.com',
     description='Add support for the py2neo Object Graph Mapper to your app',
     long_description=__doc__,
-    py_modules=['flask_ogm'],
+    package_dir = {'': 'flask_ogm'},
+    py_modules=['graph', 'param_converter', 'errors'],
     zip_safe=False,
     include_package_data=True,
     platforms='any',
