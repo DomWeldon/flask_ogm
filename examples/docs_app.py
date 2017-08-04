@@ -5,9 +5,9 @@ from tests.fixtures import Widget
 
 app = Flask('Flask-OGM Documentation App')
 app.config.update(
-    OGM_GRAPH_HOST = 'localhost',
-    OGM_GRAPH_USER = 'neo4j',
-    OGM_GRAPH_PASSWORD = 'password'
+    OGM_GRAPH_HOST='localhost',
+    OGM_GRAPH_USER='neo4j',
+    OGM_GRAPH_PASSWORD='password'
 )
 ogm = OGM(app)
 
@@ -15,17 +15,17 @@ ogm = OGM(app)
 @app.route('/widget_by_id/<int:widget>')  # IDs are integers
 @ParamConverter(graph_object=Widget, param='widget')
 def get_widget_by_id(widget):
-  """Pull node using Widget.__primarykey__, in our case
-  `Widget.unique_id`"""
-  return jsonify({'widget': widget.as_dict()})
+    """Pull node using Widget.__primarykey__, in our case
+    `Widget.unique_id`"""
+    return jsonify({'widget': widget.as_dict()})
 
 
 @app.route('/widget_by_name/<widget>')  # names are strings
 @ParamConverter(graph_object=Widget, param='widget', select_on='name')
 def get_widget_by_name(widget):
-  """Select a widget by name, using default controller and custom
-  attr."""
-  return jsonify({'widget': widget.as_dict()})
+    """Select a widget by name, using default controller and custom
+    attr."""
+    return jsonify({'widget': widget.as_dict()})
 
 
 def get_widget_by_composite_id(graph, composite_id):
@@ -42,8 +42,8 @@ def get_widget_by_composite_id(graph, composite_id):
 @ParamConverter(param='widget',
                 constructor=get_widget_by_composite_id)
 def get_widget_by_id2(widget):
-  """Specify graph_object.constructor using import strings"""
-  return jsonify({'widget': widget.as_dict()})
+    """Specify graph_object.constructor using import strings"""
+    return jsonify({'widget': widget.as_dict()})
 
 
 @app.route('/widgets_by_colour/<widgets_by_colour>')
@@ -69,12 +69,14 @@ def custom_not_found_callable():
 def not_found_specify_custom_callable(widget):
     return jsonify({'widget': widget.as_dict()})
 
+
 @app.route('/widget_by_id5/<int:widget>')
 @ParamConverter(graph_object=Widget,
                 param='widget',
                 on_not_found='Sorry, no widget found!')
 def not_found_specify_string(widget):
     return jsonify({'widget': widget.as_dict()})
+
 
 @app.route('/widget_by_id6/<int:widget>')
 @ParamConverter(graph_object=Widget,
@@ -83,6 +85,7 @@ def not_found_specify_string(widget):
 def not_found_specify_http_status(widget):
     """On not found: HTTP 418 I'M A TEAPOT"""
     return jsonify({'widget': widget.as_dict()})
+
 
 @app.route('/only_widget_with_colour/<widget>')
 @ParamConverter(graph_object=Widget,
@@ -95,6 +98,7 @@ def get_widgets_by_colour_unique(widget):
     return jsonify({
         'widget': widget.as_dict()
     })
+
 
 @app.route('/search_widgets_by_name/<searched_widgets>',
            defaults={'search_term': None})

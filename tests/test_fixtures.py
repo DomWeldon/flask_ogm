@@ -5,6 +5,7 @@ from .fixtures import Widget
 
 ogm = OGM()
 
+
 class WidgetTestCase(ParamConverterTestCase):
     def test_widget_as_dict(self):
         """Check as_dict method behaves as expected"""

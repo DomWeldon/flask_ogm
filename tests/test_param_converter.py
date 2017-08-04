@@ -131,7 +131,6 @@ class CallDecoratorTestCase(ParamConverterTestCase):
                 widget=4
             ) == 'NOT FOUND'
 
-
     @ParamConverter(constructor=Widget.select, param='widget',
                     on_not_found=404)
     def mock_controller_not_found(self, widget=None):
@@ -165,8 +164,6 @@ class CallDecoratorTestCase(ParamConverterTestCase):
         with self.get_app_context():
             w = self.mock_controller_check_unique(widget='blue')
             assert w.colour == 'blue'
-
-
 
     @ParamConverter(constructor=Widget.select, param='widget',
                     check_unique=True, on_more_than_one=im_a_teapot,

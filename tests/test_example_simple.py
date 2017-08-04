@@ -1,9 +1,8 @@
-import json
 from unittest import TestCase
 
 from examples.simple_app import app
 
-"""
+"""For example, the below is equivalent to :ref:`quick_start_with_primary_key`
 ALL TESTS HEREIN RELY ON THE SMALL MOVIE GRAPH BEING ACCESSIBLE IN A
 GRAPH ON LOCALHOST.
 """

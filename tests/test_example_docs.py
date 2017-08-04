@@ -1,6 +1,5 @@
 import json
 from unittest import TestCase
-from werkzeug.exceptions import ImATeapot
 
 from examples.docs_app import app, custom_not_found_callable
 from .fixtures import Widget
@@ -73,7 +72,6 @@ class DocsAppTestCase(TestCase):
         with self.app.app_context():
             r = self.app.test_client().get('/only_widget_with_colour/red')
             assert r.status == '500 INTERNAL SERVER ERROR'
-
 
     def test_search_widgets_by_name(self):
         with self.app.app_context():
