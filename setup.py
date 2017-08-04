@@ -12,8 +12,8 @@ from flask_ogm import __author__, \
                       __version__
 
 setup(
-    name='Flask-OGM',
-    version='1.1.0a1',
+    name='flask_ogm',
+    version=__version__,
     url='http://www.flask-ogm.org',
     license='Apache License, Version 2.0',
     author='Dom Weldon',
