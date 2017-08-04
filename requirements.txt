@@ -6,4 +6,3 @@ pytest
 pytest-cov
 python-coveralls
 flake8
--e git+git@github.com:DomWeldon/flask-ogm.git#egg=master

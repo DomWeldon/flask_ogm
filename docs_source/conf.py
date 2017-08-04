@@ -18,8 +18,9 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 # import os
-# import sys
+import sys
 # sys.path.insert(0, os.path.abspath('.'))
+sys.path.append('./')
 
 
 # -- General configuration ------------------------------------------------
@@ -170,6 +171,3 @@ texinfo_documents = [
      author, 'Flask-OGM', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-

@@ -1,6 +1,7 @@
 from flask import abort
 from functools import wraps
 import inspect
+from werkzeug.http import HTTP_STATUS_CODES
 
 from .graph import OGM
 
@@ -187,7 +188,7 @@ class ParamConverter(object):
                 return self.on_not_found()
 
             # do we worry about having > 1 result`
-            if len(d) > 0 and self.single and self.check_unique:
+            if len(d) > 1 and self.single and self.check_unique:
                 return self.on_more_than_one()
 
             # inject the results
@@ -218,7 +219,13 @@ class ParamConverter(object):
             return r
 
         def wrapper():
-            abort(r)
+            try:
+                if int(r) in HTTP_STATUS_CODES:
+                    abort(r)
+            except ValueError:
+                pass
+
+            return str(r)
 
         return wrapper
 

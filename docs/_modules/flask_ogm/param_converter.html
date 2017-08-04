@@ -42,6 +42,7 @@
 <span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">abort</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">from</span> <span class="nn">werkzeug.http</span> <span class="k">import</span> <span class="n">HTTP_STATUS_CODES</span>
 
 <span class="kn">from</span> <span class="nn">.graph</span> <span class="k">import</span> <span class="n">OGM</span>
 
@@ -59,7 +60,7 @@
     <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">class_name</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="ParamConverter"><a class="viewcode-back" href="../../param_converter.html#flask_ogm.param_converter.ParamConverter">[docs]</a><span class="k">class</span> <span class="nc">ParamConverter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">ParamConverter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Convert function arguments which contain lookup values</span>
 <span class="sd">    into py2neo.ogm.GraphObjects or collections thereof.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -73,33 +74,59 @@
         <span class="sd">&quot;&quot;&quot;Decorator for Flask controllers. Will convert a parameter to</span>
 <span class="sd">        either a GraphObject or a collection of GraphObject based on</span>
 <span class="sd">        a query to the graph. If no object is found, it will act as</span>
-<span class="sd">        instructed, by default, returning a 404.</span>
+<span class="sd">        instructed, by default returning a 404. Use graph_object</span>
+<span class="sd">        and/or constructor arguments to specify a callable which will</span>
+<span class="sd">        take the kwarg[param], and use it to search for a node based</span>
+<span class="sd">        on its value.</span>
 
-<span class="sd">        Use graph_object and / or constructor to specify a constructor</span>
-<span class="sd">        function which takes the</span>
-
-<span class="sd">        :param graph_object: class to return instances of, usually</span>
-<span class="sd">                             a py2neo.ogm.GraphObject but can be custom</span>
-<span class="sd">                             so long as it implements default method</span>
-<span class="sd">                             if no constructor specified</span>
-<span class="sd">        :param constructor: reference to the method used query the</span>
-<span class="sd">                            graph, str or callable, if str then can be</span>
-<span class="sd">                            either fully qualified reference to a</span>
-<span class="sd">                            function the attr of the graph_object.</span>
-<span class="sd">        :param param: kwarg index to use to query the graph - will be</span>
-<span class="sd">                      replaced by the return of the query</span>
-<span class="sd">        :param select_on: if specified, the param will not be passed to</span>
-<span class="sd">                          the constructor when called, but added onto</span>
-<span class="sd">                          the constructor using where(select_on = x)</span>
-<span class="sd">        :param on_not_found: what to return when no objects are found,</span>
+<span class="sd">        :param graph_object: Class to return instances of, usually</span>
+<span class="sd">                             a `py2neo.ogm.GraphObject` but can be</span>
+<span class="sd">                             custom class, or a string referencing</span>
+<span class="sd">                             that object (e.g., `src.models.Widget`).</span>
+<span class="sd">                             If a string is set for `constructor`,</span>
+<span class="sd">                             `ParamConverter` will look for a method on</span>
+<span class="sd">                             this object with that name, if</span>
+<span class="sd">                             `constructor` is None, then the</span>
+<span class="sd">                             `DEFAULT_CONSTRUCTOR_METHOD` (set as</span>
+<span class="sd">                             select) will be used instead. If</span>
+<span class="sd">                             `graph_object` is `None`, then</span>
+<span class="sd">                             `constructor` must be specified.</span>
+<span class="sd">        :param constructor: A callable, or reference to a callable to</span>
+<span class="sd">                            query the graph and return an iterable of</span>
+<span class="sd">                            GraphObjects. If `graph_object` is</span>
+<span class="sd">                            specified, and this value is a string,</span>
+<span class="sd">                            `ParamConverter` will search for a method</span>
+<span class="sd">                            named after this string on graph_object.</span>
+<span class="sd">        :param param: The key of the keyword argument to act on.</span>
+<span class="sd">                      `ParamConverter` will pass the value of this arg</span>
+<span class="sd">                      to the constructor, and replace it with what is</span>
+<span class="sd">                      returned by the constructor.</span>
+<span class="sd">        :param select_on: If graph_object is if specified, and this</span>
+<span class="sd">                          value is a string, the param will not be</span>
+<span class="sd">                          passed to the constructor when called, but</span>
+<span class="sd">                          handed to the query using the `where()`</span>
+<span class="sd">                          method, i.e. for `select_on=&#39;name&#39;`:`</span>
+<span class="sd">                          `Widget.select(graph).where(name=x)`</span>
+<span class="sd">        :param on_not_found: What to return when no objects are found,</span>
 <span class="sd">                             can be callable, int (HTTP status) or</span>
-<span class="sd">                             str, if None, will return 404</span>
-<span class="sd">        :param on_more_than_one: if unique is True, what to return</span>
-<span class="sd">                                 if &gt;1 argument is found, if None, 500</span>
-<span class="sd">        :param bind: the bind to search using with ogm.get_connection,</span>
-<span class="sd">                     default if None</span>
+<span class="sd">                             str. If None, will return 404.</span>
+<span class="sd">        :param on_more_than_one: If `check_unique` is True and `single`</span>
+<span class="sd">                                 is False, what to return if &gt;1 match</span>
+<span class="sd">                                 is returned by the constructor. If</span>
+<span class="sd">                                 `None` then will return status 500.</span>
+<span class="sd">        :param single: Bool, whether to return a the first result from</span>
+<span class="sd">                       `constructor`, or all results as a list</span>
+<span class="sd">                       (`constructor` must return an iterable). Can</span>
+<span class="sd">                       be used in conjunction with `check_unique` and</span>
+<span class="sd">                       `on_more_than_one` to ensure values are unique</span>
+<span class="sd">                       in the graph.</span>
+<span class="sd">        :param bind: the bind to search using with</span>
+<span class="sd">                     `ogm.get_connection()`, `ogm.graph` is used if</span>
+<span class="sd">                     None.</span>
 <span class="sd">        :param check_unique: if True when single is True, will check</span>
-<span class="sd">                             that only 1 object is returned</span>
+<span class="sd">                             that only 1 object is returned. If &gt;1</span>
+<span class="sd">                             object, then will act according to</span>
+<span class="sd">                             `on_more_than_one`</span>
 <span class="sd">        :param inject_old_kwarg_as: if a string, the original value of</span>
 <span class="sd">                                    param will be injected into the</span>
 <span class="sd">                                    decorated function. The string must</span>
@@ -202,7 +229,7 @@
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_not_found</span><span class="p">()</span>
 
             <span class="c1"># do we worry about having &gt; 1 result`</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">single</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_unique</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">single</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_unique</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_more_than_one</span><span class="p">()</span>
 
             <span class="c1"># inject the results</span>
@@ -233,7 +260,13 @@
             <span class="k">return</span> <span class="n">r</span>
 
         <span class="k">def</span> <span class="nf">wrapper</span><span class="p">():</span>
-            <span class="n">abort</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="ow">in</span> <span class="n">HTTP_STATUS_CODES</span><span class="p">:</span>
+                    <span class="n">abort</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">wrapper</span>
 
@@ -326,7 +359,7 @@
             <span class="p">)</span><span class="o">.</span><span class="n">append_to_message</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">graph_object</span><span class="p">))</span>
 
         <span class="c1"># code should never run past here</span>
-        <span class="k">assert</span> <span class="kc">False</span>  <span class="c1"># pragma: no cover</span></div>
+        <span class="k">assert</span> <span class="kc">False</span>  <span class="c1"># pragma: no cover</span>
 </pre></div>
 
           </div>

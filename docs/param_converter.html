@@ -46,60 +46,71 @@
 <p>It can be used as a <a class="reference external" href="http://flask.pocoo.org/docs/0.12/patterns/viewdecorators/">view decorator</a> to convert a parameter in the URL route, to the relevant <cite>py2neo.ogm.Graph</cite> object, or a list of such objects, which correspond to the value passed from the user in the URL. The best way to understand the behaviour of the decorator is to see an example such as that below.</p>
 <p>The examples below are taken from the testing suite, and all refer to <cite>Widget</cite> nodes, which have an integer ID (<cite>Widget.unique_id</cite>), a name (<cite>Widget.name</cite>) and a colour (<cite>Widget.colour</cite>). Whilst widget IDs and names are unique, colours are not.</p>
 <p>The following boiler plate code is omitted from all examples.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># setup the app, import relevant objects</span>
-<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
-<span class="kn">from</span> <span class="nn">flask_ogm</span> <span class="k">import</span> <span class="n">OGM</span>
-<span class="kn">from</span> <span class="nn">flask_ogm.param_converter</span> <span class="k">import</span> <span class="n">ParamConverter</span>
-<span class="kn">from</span> <span class="nn">tests.fixtures</span> <span class="k">import</span> <span class="n">Widget</span>
-
-<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;Flask-OGM Quick Start Test App&#39;</span><span class="p">)</span>
-<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-  <span class="n">OGM_GRAPH_HOST</span> <span class="o">=</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
-  <span class="n">OGM_GRAPH_USER</span> <span class="o">=</span> <span class="s1">&#39;neo4j&#39;</span><span class="p">,</span>
-  <span class="n">OGM_GRAPH_PASSWORD</span> <span class="o">=</span> <span class="s1">&#39;password&#39;</span>
-<span class="p">)</span>
-<span class="n">ogm</span> <span class="o">=</span> <span class="n">OGM</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="section" id="arguments">
-<h2>Arguments<a class="headerlink" href="#arguments" title="Permalink to this headline">¶</a></h2>
-<p>Param Converter takes the following arguments.</p>
+<div class="section" id="argument-reference">
+<h2>Argument Reference<a class="headerlink" href="#argument-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="method">
 <dt id="flask_ogm.param_converter.ParamConverter.__init__">
 <code class="descclassname">ParamConverter.</code><code class="descname">__init__</code><span class="sig-paren">(</span><em>graph_object=None</em>, <em>constructor=None</em>, <em>param=None</em>, <em>select_on=None</em>, <em>on_not_found=404</em>, <em>bind=None</em>, <em>check_unique=False</em>, <em>on_more_than_one=None</em>, <em>single=True</em>, <em>inject_old_kwarg_as=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_ogm/param_converter.html#ParamConverter.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_ogm.param_converter.ParamConverter.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decorator for Flask controllers. Will convert a parameter to
 either a GraphObject or a collection of GraphObject based on
 a query to the graph. If no object is found, it will act as
-instructed, by default, returning a 404.</p>
-<p>Use graph_object and / or constructor to specify a constructor
-function which takes the</p>
+instructed, by default returning a 404. Use graph_object
+and/or constructor arguments to specify a callable which will
+take the kwarg[param], and use it to search for a node based
+on its value.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>graph_object</strong> – class to return instances of, usually
-a py2neo.ogm.GraphObject but can be custom
-so long as it implements default method
-if no constructor specified</li>
-<li><strong>constructor</strong> – reference to the method used query the
-graph, str or callable, if str then can be
-either fully qualified reference to a
-function the attr of the graph_object.</li>
-<li><strong>param</strong> – kwarg index to use to query the graph - will be
-replaced by the return of the query</li>
-<li><strong>select_on</strong> – if specified, the param will not be passed to
-the constructor when called, but added onto
-the constructor using where(select_on = x)</li>
-<li><strong>on_not_found</strong> – what to return when no objects are found,
+<li><strong>graph_object</strong> – Class to return instances of, usually
+a <cite>py2neo.ogm.GraphObject</cite> but can be
+custom class, or a string referencing
+that object (e.g., <cite>src.models.Widget</cite>).
+If a string is set for <cite>constructor</cite>,
+<cite>ParamConverter</cite> will look for a method on
+this object with that name, if
+<cite>constructor</cite> is None, then the
+<cite>DEFAULT_CONSTRUCTOR_METHOD</cite> (set as
+select) will be used instead. If
+<cite>graph_object</cite> is <cite>None</cite>, then
+<cite>constructor</cite> must be specified.</li>
+<li><strong>constructor</strong> – A callable, or reference to a callable to
+query the graph and return an iterable of
+GraphObjects. If <cite>graph_object</cite> is
+specified, and this value is a string,
+<cite>ParamConverter</cite> will search for a method
+named after this string on graph_object.</li>
+<li><strong>param</strong> – The key of the keyword argument to act on.
+<cite>ParamConverter</cite> will pass the value of this arg
+to the constructor, and replace it with what is
+returned by the constructor.</li>
+<li><strong>select_on</strong> – If graph_object is if specified, and this
+value is a string, the param will not be
+passed to the constructor when called, but
+handed to the query using the <cite>where()</cite>
+method, i.e. for <cite>select_on=’name’</cite>:`
+<cite>Widget.select(graph).where(name=x)</cite></li>
+<li><strong>on_not_found</strong> – What to return when no objects are found,
 can be callable, int (HTTP status) or
-str, if None, will return 404</li>
-<li><strong>on_more_than_one</strong> – if unique is True, what to return
-if &gt;1 argument is found, if None, 500</li>
-<li><strong>bind</strong> – the bind to search using with ogm.get_connection,
-default if None</li>
+str. If None, will return 404.</li>
+<li><strong>on_more_than_one</strong> – If <cite>check_unique</cite> is True and <cite>single</cite>
+is False, what to return if &gt;1 match
+is returned by the constructor. If
+<cite>None</cite> then will return status 500.</li>
+<li><strong>single</strong> – Bool, whether to return a the first result from
+<cite>constructor</cite>, or all results as a list
+(<cite>constructor</cite> must return an iterable). Can
+be used in conjunction with <cite>check_unique</cite> and
+<cite>on_more_than_one</cite> to ensure values are unique
+in the graph.</li>
+<li><strong>bind</strong> – the bind to search using with
+<cite>ogm.get_connection()</cite>, <cite>ogm.graph</cite> is used if
+None.</li>
 <li><strong>check_unique</strong> – if True when single is True, will check
-that only 1 object is returned</li>
+that only 1 object is returned. If &gt;1
+object, then will act according to
+<cite>on_more_than_one</cite></li>
 <li><strong>inject_old_kwarg_as</strong> – if a string, the original value of
 param will be injected into the
 decorated function. The string must
@@ -115,38 +126,180 @@ function.</li>
 </table>
 </dd></dl>
 
-<p>Test</p>
+</div>
+<div class="section" id="example-usage">
+<h2>Example Usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="boilerplate-used-in-examples">
+<h3>Boilerplate Used in Examples<a class="headerlink" href="#boilerplate-used-in-examples" title="Permalink to this headline">¶</a></h3>
+<p>The following boilerplate code (setting up the example app, connecting to the database, and importing <cite>ParamConverter</cite> and <cite>Widget</cite> model) should be assumed in all examples.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
+<span class="kn">from</span> <span class="nn">flask_ogm</span> <span class="k">import</span> <span class="n">OGM</span>
+<span class="kn">from</span> <span class="nn">flask_ogm.param_converter</span> <span class="k">import</span> <span class="n">ParamConverter</span>
+<span class="kn">from</span> <span class="nn">tests.fixtures</span> <span class="k">import</span> <span class="n">Widget</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;Flask-OGM Quick Start Test App&#39;</span><span class="p">)</span>
+  <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+  <span class="n">OGM_GRAPH_HOST</span> <span class="o">=</span> <span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
+  <span class="n">OGM_GRAPH_USER</span> <span class="o">=</span> <span class="s1">&#39;neo4j&#39;</span><span class="p">,</span>
+  <span class="n">OGM_GRAPH_PASSWORD</span> <span class="o">=</span> <span class="s1">&#39;password&#39;</span>
+<span class="p">)</span>
+<span class="n">ogm</span> <span class="o">=</span> <span class="n">OGM</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The Widget object is taken from the unit tests for the module.</p>
 </div>
 <div class="section" id="quick-start-pull-node-from-graph-using-primary-key">
-<h2>Quick Start: Pull Node from Graph using Primary Key<a class="headerlink" href="#quick-start-pull-node-from-graph-using-primary-key" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># simple example</span>
-<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/count&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">node_count</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;Example running a cypher query. Return node count.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-      <span class="s1">&#39;MATCH (n) RETURN COUNT (n) AS node_count&#39;</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">evaluate</span><span class="p">())</span>
-
-
-<span class="c1"># using ParamConverter</span>
-<span class="c1"># we need a model to pull out of the graph</span>
-<span class="k">class</span> <span class="nc">Movie</span><span class="p">(</span><span class="n">GraphObject</span><span class="p">):</span>
-    <span class="n">title</span> <span class="o">=</span> <span class="n">Property</span><span class="p">()</span>  <span class="c1"># only one property shown in quick start</span>
-
-
-<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/movie/&lt;movie&gt;&#39;</span><span class="p">)</span>
-<span class="nd">@ParamConverter</span><span class="p">(</span><span class="n">graph_object</span><span class="o">=</span><span class="n">Movie</span><span class="p">,</span> <span class="n">param</span><span class="o">=</span><span class="s1">&#39;movie&#39;</span><span class="p">,</span> <span class="n">search_on</span><span class="o">=</span><span class="s1">&#39;title&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">get_movie_by_title</span><span class="p">(</span><span class="n">movie</span><span class="p">)</span>
-    <span class="sd">&quot;&quot;&quot;Example using ParamConverter.</span>
-<span class="sd">    Search for movie based on Title, if found, return movie title,</span>
-<span class="sd">    if no movie found, ParamConverter will return a 404, and this</span>
-<span class="sd">    code will not be executed.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">movie</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>  <span class="c1"># simple as that</span>
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<h3>Quick Start: Pull Node from Graph using Primary Key<a class="headerlink" href="#quick-start-pull-node-from-graph-using-primary-key" title="Permalink to this headline">¶</a></h3>
+<p>You need only specify the name of your parameter and a callable to find it. By default, the <cite>py2neo.ogm.GraphObject.select()</cite> is used if only a GraphObject is specified. By default, if a node if not found, an HTTP <cite>404 NOT FOUND</cite> error will be raised.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/widget_by_id/&lt;int:widget&gt;&#39;</span><span class="p">)</span>  <span class="c1"># IDs are integers</span>
+<span class="nd">@ParamConverter</span><span class="p">(</span><span class="n">graph_object</span><span class="o">=</span><span class="n">Widget</span><span class="p">,</span> <span class="n">param</span><span class="o">=</span><span class="s1">&#39;widget&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_widget_by_id</span><span class="p">(</span><span class="n">widget</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Pull node using Widget.__primarykey__, in our case</span>
+<span class="sd">  `Widget.unique_id`&quot;&quot;&quot;</span>
+  <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="n">widget</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()})</span>
 </pre></div>
+</div>
+</div>
+<div class="section" id="pull-node-from-graph-using-specified-property">
+<h3>Pull Node From Graph Using Specified Property<a class="headerlink" href="#pull-node-from-graph-using-specified-property" title="Permalink to this headline">¶</a></h3>
+<p>Specify <cite>select_on</cite> to search on a given node property.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/widget_by_name/&lt;widget&gt;&#39;</span><span class="p">)</span>  <span class="c1"># names are strings</span>
+<span class="nd">@ParamConverter</span><span class="p">(</span><span class="n">graph_object</span><span class="o">=</span><span class="n">Widget</span><span class="p">,</span> <span class="n">param</span><span class="o">=</span><span class="s1">&#39;widget&#39;</span><span class="p">,</span> <span class="n">select_on</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_widget_by_name</span><span class="p">(</span><span class="n">widget</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Select a widget by name, using default controller and custom</span>
+<span class="sd">  attr.&quot;&quot;&quot;</span>
+  <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="n">widget</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()})</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="specify-object-using-import-reference-and-or-attribute-name">
+<h3>Specify Object Using Import Reference and/or Attribute Name<a class="headerlink" href="#specify-object-using-import-reference-and-or-attribute-name" title="Permalink to this headline">¶</a></h3>
+<p>Rather than importing the graph object, or a constructor, you can specify the graph object using an import reference, with an optional string to select by an attribute.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/widget_by_id2/&lt;widget&gt;&#39;</span><span class="p">)</span>  <span class="c1"># names are strings</span>
+<span class="nd">@ParamConverter</span><span class="p">(</span><span class="n">graph_object</span><span class="o">=</span><span class="s1">&#39;tests.fixtures.Widget&#39;</span><span class="p">,</span>
+              <span class="n">param</span><span class="o">=</span><span class="s1">&#39;widget&#39;</span><span class="p">,</span>
+              <span class="n">constructor</span><span class="o">=</span><span class="s1">&#39;select&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_widget_by_id2</span><span class="p">(</span><span class="n">widget</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Specify graph_object.constructor using import strings&quot;&quot;&quot;</span>
+  <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="n">widget</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()})</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="use-a-custom-constructor-method">
+<h3>Use a Custom Constructor Method<a class="headerlink" href="#use-a-custom-constructor-method" title="Permalink to this headline">¶</a></h3>
+<p>You can also create or specify custom constructor methods, which again can be passed either as callables, or strings containing import references.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_widget_by_composite_id</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">composite_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Example constructor method, if for some reason you needed to</span>
+<span class="sd">    perform an operation on the input before searching for the node in</span>
+<span class="sd">    the database.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># composite id takes form widget:1</span>
+    <span class="n">unique_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">composite_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="c1"># constructors must return an iterable</span>
+    <span class="k">return</span> <span class="n">Widget</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">unique_id</span><span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/widget_by_composite_id/&lt;widget&gt;&#39;</span><span class="p">)</span>
+<span class="nd">@ParamConverter</span><span class="p">(</span><span class="n">param</span><span class="o">=</span><span class="s1">&#39;widget&#39;</span><span class="p">,</span>
+                <span class="n">constructor</span><span class="o">=</span><span class="n">get_widget_by_composite_id</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_widget_by_id2</span><span class="p">(</span><span class="n">widget</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Specify graph_object.constructor using import strings&quot;&quot;&quot;</span>
+  <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="n">widget</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()})</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="not-found-specify-callable">
+<h3>Not Found: Specify Callable<a class="headerlink" href="#not-found-specify-callable" title="Permalink to this headline">¶</a></h3>
+<p>By default, <cite>ParamConverter</cite> will raise an HTTP <cite>404 NOT FOUND</cite> exception if the node is not found, but custom behaviours can be specified in a callable, or as a string or integer.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">custom_not_found_callable</span><span class="p">():</span>
+    <span class="k">return</span> <span class="s1">&#39;Whoops! Widget not found!&#39;</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/widget_by_id4/&lt;int:widget&gt;&#39;</span><span class="p">)</span>
+<span class="nd">@ParamConverter</span><span class="p">(</span><span class="n">graph_object</span><span class="o">=</span><span class="n">Widget</span><span class="p">,</span>
+                <span class="n">param</span><span class="o">=</span><span class="s1">&#39;widget&#39;</span><span class="p">,</span>
+                <span class="n">on_not_found</span><span class="o">=</span><span class="n">custom_not_found_callable</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">not_found_specify_custom_callable</span><span class="p">(</span><span class="n">widget</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="n">widget</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()})</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="not-found-specify-string-non-http-status-code-integer-response">
+<h3>Not Found: Specify String / Non-HTTP Status Code Integer Response<a class="headerlink" href="#not-found-specify-string-non-http-status-code-integer-response" title="Permalink to this headline">¶</a></h3>
+<p>Not found responses can also be plain strings. If an integer is passed which does not relate to an exception in the <cite>werkzeug.exceptions</cite> library (e.g. <cite>-1</cite> or <cite>0</cite>), then it will be cast to a string and returned as the response.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/widget_by_id5/&lt;int:widget&gt;&#39;</span><span class="p">)</span>
+<span class="nd">@ParamConverter</span><span class="p">(</span><span class="n">graph_object</span><span class="o">=</span><span class="n">Widget</span><span class="p">,</span>
+                <span class="n">param</span><span class="o">=</span><span class="s1">&#39;widget&#39;</span><span class="p">,</span>
+                <span class="n">on_not_found</span><span class="o">=</span><span class="s1">&#39;Sorry, no widget found!&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">not_found_specify_string</span><span class="p">(</span><span class="n">widget</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="n">widget</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()})</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="not-found-specify-http-status-code">
+<h3>Not Found: Specify HTTP Status Code<a class="headerlink" href="#not-found-specify-http-status-code" title="Permalink to this headline">¶</a></h3>
+<p>If an http status code is supplied as an integer, this response will be returned, so long as the status code is found within <cite>werkzeug.exceptions</cite></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/widget_by_id6/&lt;int:widget&gt;&#39;</span><span class="p">)</span>
+<span class="nd">@ParamConverter</span><span class="p">(</span><span class="n">graph_object</span><span class="o">=</span><span class="n">Widget</span><span class="p">,</span>
+                <span class="n">param</span><span class="o">=</span><span class="s1">&#39;widget&#39;</span><span class="p">,</span>
+                <span class="n">on_not_found</span><span class="o">=</span><span class="mi">418</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">not_found_specify_http_status</span><span class="p">(</span><span class="n">widget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;On not found: HTTP 418 I&#39;M A TEAPOT&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="n">widget</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()})</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="returning-more-than-one-node">
+<h3>Returning More than One Node<a class="headerlink" href="#returning-more-than-one-node" title="Permalink to this headline">¶</a></h3>
+<p><cite>ParamConverter</cite> can also return a list of widgets, for example searching on a given property, in this case colour.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/widgets_by_colour/&lt;widgets_by_colour&gt;&#39;</span><span class="p">)</span>
+<span class="nd">@ParamConverter</span><span class="p">(</span><span class="n">graph_object</span><span class="o">=</span><span class="n">Widget</span><span class="p">,</span>
+                <span class="n">param</span><span class="o">=</span><span class="s1">&#39;widgets_by_colour&#39;</span><span class="p">,</span>
+                <span class="n">select_on</span><span class="o">=</span><span class="s1">&#39;colour&#39;</span><span class="p">,</span>
+                <span class="n">single</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_widgets_by_colour</span><span class="p">(</span><span class="n">widgets_by_colour</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a list of nodes&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span>
+        <span class="s1">&#39;widgets&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">w</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">widgets_by_colour</span><span class="p">]</span>
+    <span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="checking-only-one-node-is-returned">
+<h3>Checking Only One Node Is Returned<a class="headerlink" href="#checking-only-one-node-is-returned" title="Permalink to this headline">¶</a></h3>
+<p>If you need to be confident that only one node was found, you can check this using the <cite>check_unique</cite> option. If more than one node is found when this option is set to <cite>True</cite>, then <cite>on_more_than_one</cite> will be called, if nothing is specified for <cite>on_more_than_one</cite>, then an HTTP <cite>500 INTERNAL ERROR</cite> will be returned. <cite>on_more_than_one</cite> takes the same form as <cite>on_not_found</cite>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/only_widget_with_colour/&lt;widget&gt;&#39;</span><span class="p">)</span>
+<span class="nd">@ParamConverter</span><span class="p">(</span><span class="n">graph_object</span><span class="o">=</span><span class="n">Widget</span><span class="p">,</span>
+                <span class="n">param</span><span class="o">=</span><span class="s1">&#39;widget&#39;</span><span class="p">,</span>
+                <span class="n">select_on</span><span class="o">=</span><span class="s1">&#39;colour&#39;</span><span class="p">,</span>
+                <span class="n">single</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">check_unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_widgets_by_colour_unique</span><span class="p">(</span><span class="n">widget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a list of nodes&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span>
+        <span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="n">widget</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
+    <span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reinjecting-old-param">
+<h3>Reinjecting Old Param<a class="headerlink" href="#reinjecting-old-param" title="Permalink to this headline">¶</a></h3>
+<p>Often it is helpful to know the original value of <cite>param</cite>, since you may not be able to know it from the graph objects returned. In such instances you can specify a keyword argument for the search term to be reinjected as. Presently, this must be specified as a defailt in the route of the view, this will be changed in future versions.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/search_widgets_by_name/&lt;searched_widgets&gt;&#39;</span><span class="p">,</span>
+           <span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;search_term&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">})</span>
+<span class="nd">@ParamConverter</span><span class="p">(</span><span class="n">graph_object</span><span class="o">=</span><span class="n">Widget</span><span class="p">,</span>
+                <span class="n">constructor</span><span class="o">=</span><span class="s1">&#39;search_on_name&#39;</span><span class="p">,</span>
+                <span class="n">param</span><span class="o">=</span><span class="s1">&#39;searched_widgets&#39;</span><span class="p">,</span>
+                <span class="n">single</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">inject_old_kwarg_as</span><span class="o">=</span><span class="s1">&#39;search_term&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">search_widgets_by_name</span><span class="p">(</span><span class="n">searched_widgets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">search_term</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return both the search term and the widgets&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span>
+        <span class="s1">&#39;search_term&#39;</span><span class="p">:</span> <span class="n">search_term</span><span class="p">,</span>
+        <span class="s1">&#39;widgets&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">w</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">searched_widgets</span><span class="p">]</span>
+    <span class="p">})</span>
+</pre></div>
+</div>
 </div>
 </div>
 </div>
@@ -172,8 +325,21 @@ function.</li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph.html">Graph Connections</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">ParamConverter</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#arguments">Arguments</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#quick-start-pull-node-from-graph-using-primary-key">Quick Start: Pull Node from Graph using Primary Key</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#argument-reference">Argument Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-usage">Example Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#boilerplate-used-in-examples">Boilerplate Used in Examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quick-start-pull-node-from-graph-using-primary-key">Quick Start: Pull Node from Graph using Primary Key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pull-node-from-graph-using-specified-property">Pull Node From Graph Using Specified Property</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#specify-object-using-import-reference-and-or-attribute-name">Specify Object Using Import Reference and/or Attribute Name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-a-custom-constructor-method">Use a Custom Constructor Method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#not-found-specify-callable">Not Found: Specify Callable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#not-found-specify-string-non-http-status-code-integer-response">Not Found: Specify String / Non-HTTP Status Code Integer Response</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#not-found-specify-http-status-code">Not Found: Specify HTTP Status Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#returning-more-than-one-node">Returning More than One Node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#checking-only-one-node-is-returned">Checking Only One Node Is Returned</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#reinjecting-old-param">Reinjecting Old Param</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">Configuration</a></li>

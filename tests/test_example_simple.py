@@ -9,7 +9,7 @@ GRAPH ON LOCALHOST.
 """
 
 
-class MovieAppTestCase(TestCase):
+class SimpleAppTestCase(TestCase):
     def setUp(self):
         self.app = app
         self.app.config['TESTING'] = True

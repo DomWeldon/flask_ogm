@@ -53,6 +53,10 @@ def im_a_teapot():
     abort(418)
 
 
+def custom_on_not_found_callable():
+    return 'NOT FOUND'
+
+
 class CallDecoratorTestCase(ParamConverterTestCase):
 
     @ParamConverter(graph_object=Widget, param='unique_id')
@@ -117,6 +121,18 @@ class CallDecoratorTestCase(ParamConverterTestCase):
             assert len(widgets) == 2
 
     @ParamConverter(constructor=Widget.select, param='widget',
+                    on_not_found=custom_on_not_found_callable)
+    def mock_custom_on_not_found_callable(self, widget=None):
+        return False
+
+    def test_custom_on_not_found_callable(self):
+        with self.get_app_context():
+            assert self.mock_custom_on_not_found_callable(
+                widget=4
+            ) == 'NOT FOUND'
+
+
+    @ParamConverter(constructor=Widget.select, param='widget',
                     on_not_found=404)
     def mock_controller_not_found(self, widget=None):
         return False
@@ -144,6 +160,13 @@ class CallDecoratorTestCase(ParamConverterTestCase):
                 assert True
             else:
                 assert False
+
+    def test_check_unique_pass(self):
+        with self.get_app_context():
+            w = self.mock_controller_check_unique(widget='blue')
+            assert w.colour == 'blue'
+
+
 
     @ParamConverter(constructor=Widget.select, param='widget',
                     check_unique=True, on_more_than_one=im_a_teapot,
@@ -229,6 +252,13 @@ class CallableGeneratorsTestCase(ParamConverterTestCase):
         else:
             assert False
 
+    def test_with_bad_int(self):
+        assert ParamConverter.resolve_to_return_callable(5000)() == '5000'
+
+    def test_with_str(self):
+        s = 'NOT FOUND'
+        assert ParamConverter.resolve_to_return_callable(s)() == s
+
     def test_with_int(self):
         try:
             ParamConverter.resolve_to_return_callable(500)()
@@ -239,10 +269,8 @@ class CallableGeneratorsTestCase(ParamConverterTestCase):
 
     def test_with_callable(self):
         def c():
-            return NotFound()
-        assert isinstance(
-            ParamConverter.resolve_to_return_callable(c)(),
-            NotFound)
+            return 'HELLO'
+        assert ParamConverter.resolve_to_return_callable(c) == c
 
 
 class ResolveFQNToCallableTestCase(ParamConverterTestCase):
