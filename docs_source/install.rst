@@ -23,9 +23,9 @@ You can now create an application and access your graph using the ``ogm.graph`` 
 
   app = Flask('Flask-OGM Quick Start Test App')
   app.config.update(
-    OGM_GRAPH_HOST = 'localhost',
-    OGM_GRAPH_USER = 'neo4j',
-    OGM_GRAPH_PASSWORD = 'password'
+    OGM_GRAPH_HOST='localhost',
+    OGM_GRAPH_USER='neo4j',
+    OGM_GRAPH_PASSWORD='password'
   )
   ogm = OGM(app)
 
