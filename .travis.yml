@@ -21,7 +21,7 @@ script:
   - >-
     curl -H "Content-Type: application/json" -X POST -d '{"password":"password"}' -u neo4j:neo4j http://localhost:7474/user/neo4j/password > /dev/null
 
-  - python tests/create_movie_graph.py
+  - python tests/create_fixtures.py
   - py.test --cov=flask_ogm tests/
 
 services:
