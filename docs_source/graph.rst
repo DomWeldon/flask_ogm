@@ -102,8 +102,8 @@ On occasion, an application will need to use more than one database. These can b
         """Get counts from both graphs."""
         q = 'MATCH (n) RETURN COUNT(n) AS node_count'
         return jsonify({
-            'remote': ogm.get_connection(bind = 'REMOTE').run(q).evaluate(),
-            'local': ogm.get_connection(bind = 'LOCAL').run(q).evaluate(),
+            'remote': ogm.get_connection(bind='REMOTE').run(q).evaluate(),
+            'local': ogm.get_connection(bind='LOCAL').run(q).evaluate(),
         })
 
 
@@ -144,8 +144,8 @@ The default connection can also be set in this way, using the bind ``DEFAULT``, 
         """Get counts from both graphs."""
         q = 'MATCH (n) RETURN COUNT(n) AS node_count'
         return jsonify({
-            'remote': ogm.get_connection(bind = 'REMOTE').run(q).evaluate(),
-            'default': ogm.get_connection(bind = 'DEFAULT').run(q).evaluate(),
+            'remote': ogm.get_connection(bind='REMOTE').run(q).evaluate(),
+            'default': ogm.get_connection(bind='DEFAULT').run(q).evaluate(),
         })
 
 
