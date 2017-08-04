@@ -10,7 +10,7 @@ __author__ = 'Dom Weldon <dom.weldon@gmail.com>'
 __email__ = 'dom.weldon@gmail.com'
 __license__ = 'Apache License, Version 2.0'
 __package__ = 'flask_ogm'
-__version__ = '1.1.0a4'
+__version__ = '1.1.0a5'
 
 setup(
     name='flask_ogm',
@@ -22,9 +22,6 @@ setup(
     description='Add support for the py2neo Object Graph Mapper to your app',
     long_description=__doc__,
     py_modules=['flask_ogm'],
-    # if you would be using a package instead use packages instead
-    # of py_modules:
-    # packages=['flask_sqlite3'],
     zip_safe=False,
     include_package_data=True,
     platforms='any',
