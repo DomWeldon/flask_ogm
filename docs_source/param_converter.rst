@@ -35,7 +35,7 @@ The following boilerplate code (setting up the example app, connecting to the da
   from flask_ogm.param_converter import ParamConverter
   from tests.fixtures import Widget
 
-  app = Flask('Flask-OGM Documentation App')
+  app = Flask(__name__)
   app.config.update(
       OGM_GRAPH_HOST='localhost',
       OGM_GRAPH_USER='neo4j',

@@ -15,7 +15,7 @@ except ImportError:
     from flask_ogm import OGM
 
 
-app = Flask('Flask-OGM Example App')
+app = Flask(__name__)
 
 app.config.update(
     OGM_GRAPH_HOST='localhost',

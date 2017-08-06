@@ -48,7 +48,7 @@ The simplest way to connect to a single graph is as below. Optional parameters a
   from flask import Flask
   from flask_ogm import OGM
 
-  app = Flask('Flask OGM Single Connection Test App')
+  app = Flask(__name__)
 
   app.config['OGM_GRAPH_HOST'] = 'localhost'
   app.config['OGM_GRAPH_USER'] = 'neo4j'
@@ -76,7 +76,7 @@ On occasion, an application will need to use more than one database. These can b
     from flask import Flask, jsonify
     from flask_ogm import OGM
 
-    app = Flask('Flask OGM Multiple Connection Test App')
+    app = Flask(__name__)
     # set config using binds
     app.config['OGM_GRAPH_CREDENTIALS'] = {
         'LOCAL': {
@@ -118,7 +118,7 @@ The default connection can also be set in this way, using the bind ``DEFAULT``, 
     from flask import Flask, jsonify
     from flask_ogm import OGM
 
-    app = Flask('Flask OGM Default as Bind Connection Test App')
+    app = Flask(__name__)
     # set default config using bind
     app.config['OGM_GRAPH_CREDENTIALS'] = {
         'DEFAULT': {

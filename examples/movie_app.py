@@ -72,7 +72,7 @@ class Person(ExampleGraphObject):
 
 
 # setup the test app
-app = Flask('Flask-OGM Movie App')
+app = Flask(__name__)
 app.config.update(
     OGM_GRAPH_HOST='localhost',
     OGM_GRAPH_USER='neo4j',
