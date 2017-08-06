@@ -15,7 +15,6 @@ Setting up Flask-OGM takes only a minute.
 
 ### Installation
 
-
 `flask_ogm` can be downloaded from PyPI and installed using `pip`.
 
 
