@@ -6,8 +6,8 @@
 Flask-OGM: Documentation
 ========================
 
-.. image:: https://travis-ci.org/DomWeldon/flask-ogm.svg?branch=master
-  :target: https://travis-ci.org/DomWeldon/flask-ogm
+.. image:: https://travis-ci.org/DomWeldon/flask_ogm.svg?branch=master
+  :target: https://travis-ci.org/DomWeldon/flask_ogm
 
 .. image:: https://coveralls.io/repos/github/DomWeldon/flask-ogm/badge.svg?branch=master
   :target: https://coveralls.io/github/DomWeldon/flask-ogm?branch=master
