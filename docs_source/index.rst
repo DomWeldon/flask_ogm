@@ -9,8 +9,8 @@ Flask-OGM: Documentation
 .. image:: https://travis-ci.org/DomWeldon/flask_ogm.svg?branch=master
   :target: https://travis-ci.org/DomWeldon/flask_ogm
 
-.. image:: https://coveralls.io/repos/github/DomWeldon/flask-ogm/badge.svg?branch=master
-  :target: https://coveralls.io/github/DomWeldon/flask-ogm?branch=master
+.. image:: https://coveralls.io/repos/github/DomWeldon/flask_ogm/badge.svg?branch=master
+  :target: https://coveralls.io/github/DomWeldon/flask_ogm?branch=master
 
 
 Flask-OGM provides an interface between a flask application and the py2neo_ driver for the neo4j_ graph database. This allows you to use its OGM (Object Graph Model) interface, and to execute cypher queries using py2neo as a driver.
