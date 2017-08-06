@@ -21,7 +21,7 @@ You can now create an application and access your graph using the ``ogm.graph`` 
   from flask_ogm.param_converter import ParamConverter
   from py2neo.ogm import GraphObject, Property
 
-  app = Flask('Flask-OGM Quick Start Test App')
+  app = Flask(__name__)
   app.config.update(
     OGM_GRAPH_HOST='localhost',
     OGM_GRAPH_USER='neo4j',
@@ -72,7 +72,7 @@ You can register Flask-OGM in your app using either the standard method as shown
 
   >>>> from flask import Flask
   >>>> from flask_ogm import OGM
-  >>>> app = Flask('Flask-OGM Factory Method Test App')
+  >>>> app = Flask(__name__)
   >>>> ogm = OGM()
   >>>> ogm.init_app(app)
   >>>> app.config.update(

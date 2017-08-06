@@ -55,7 +55,7 @@
 <span class="kn">from</span> <span class="nn">flask_ogm.param_converter</span> <span class="k">import</span> <span class="n">ParamConverter</span>
 <span class="kn">from</span> <span class="nn">py2neo.ogm</span> <span class="k">import</span> <span class="n">GraphObject</span><span class="p">,</span> <span class="n">Property</span>
 
-<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;Flask-OGM Quick Start Test App&#39;</span><span class="p">)</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
   <span class="n">OGM_GRAPH_HOST</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
   <span class="n">OGM_GRAPH_USER</span><span class="o">=</span><span class="s1">&#39;neo4j&#39;</span><span class="p">,</span>
@@ -101,7 +101,7 @@
 <p>You can register Flask-OGM in your app using either the standard method as shown in the Quick Start, or the factory method like below.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="go">&gt;&gt;&gt;&gt; from flask import Flask</span>
 <span class="go">&gt;&gt;&gt;&gt; from flask_ogm import OGM</span>
-<span class="go">&gt;&gt;&gt;&gt; app = Flask(&#39;Flask-OGM Factory Method Test App&#39;)</span>
+<span class="go">&gt;&gt;&gt;&gt; app = Flask(__name__)</span>
 <span class="go">&gt;&gt;&gt;&gt; ogm = OGM()</span>
 <span class="go">&gt;&gt;&gt;&gt; ogm.init_app(app)</span>
 <span class="go">&gt;&gt;&gt;&gt; app.config.update(</span>

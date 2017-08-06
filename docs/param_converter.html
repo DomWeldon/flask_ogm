@@ -137,7 +137,7 @@ function.</li>
 <span class="kn">from</span> <span class="nn">flask_ogm.param_converter</span> <span class="k">import</span> <span class="n">ParamConverter</span>
 <span class="kn">from</span> <span class="nn">tests.fixtures</span> <span class="k">import</span> <span class="n">Widget</span>
 
-<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;Flask-OGM Documentation App&#39;</span><span class="p">)</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
     <span class="n">OGM_GRAPH_HOST</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
     <span class="n">OGM_GRAPH_USER</span><span class="o">=</span><span class="s1">&#39;neo4j&#39;</span><span class="p">,</span>
