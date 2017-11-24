@@ -66,6 +66,7 @@ def get_movie_by_title(movie)
     """
     return str(movie.title)  # simple as that
 
+
 if __name__ == '__main__':
     app.run(debug=True)
 ```
